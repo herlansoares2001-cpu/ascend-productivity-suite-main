@@ -175,117 +175,118 @@ export function InvoiceView({ invoices, onPayInvoice, cardColor, limitInfo }: In
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Content Scrolled */}
-                <ScrollArea className="flex-1">
-                    <div className="p-4 space-y-6">
-                        {sortedGroups.map(([catId, data]) => {
-                            const CategoryIcon = CATEGORY_ICONS[catId as TransactionCategory] || CATEGORY_ICONS['other'];
-                            const groupIcon = getCategoryIcon(catId); // Use catId for getCategoryIcon
-                            const Icon = groupIcon;
-                            return (
-                                <div key={catId} className="mb-6 last:mb-0">
-                                    <div className="flex items-center justify-between mb-3 sticky top-0 bg-background/95 backdrop-blur py-2 z-10">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground mr-1">
-                                                <Icon className="w-4 h-4" />
-                                            </div>
-                                            <h3 className="font-medium text-sm text-foreground capitalize">{CATEGORY_LABELS[catId as TransactionCategory] === 'Outros' ? 'Outros' : CATEGORY_LABELS[catId as TransactionCategory]}</h3>
+            {/* Content Scrolled */}
+            <ScrollArea className="flex-1">
+                <div className="p-4 space-y-6">
+                    {sortedGroups.map(([catId, data]) => {
+                        const CategoryIcon = CATEGORY_ICONS[catId as TransactionCategory] || CATEGORY_ICONS['other'];
+                        const groupIcon = getCategoryIcon(catId); // Use catId for getCategoryIcon
+                        const Icon = groupIcon;
+                        return (
+                            <div key={catId} className="mb-6 last:mb-0">
+                                <div className="flex items-center justify-between mb-3 sticky top-0 bg-background/95 backdrop-blur py-2 z-10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground mr-1">
+                                            <Icon className="w-4 h-4" />
                                         </div>
-                                        <span className="text-xs font-medium">R$ {data.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                        <h3 className="font-medium text-sm text-foreground capitalize">{CATEGORY_LABELS[catId as TransactionCategory] === 'Outros' ? 'Outros' : CATEGORY_LABELS[catId as TransactionCategory]}</h3>
                                     </div>
-                                    <div className="space-y-1">
-                                        {data.transactions.map((t) => (
-                                            <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors text-sm">
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className="w-1 h-8 rounded-full bg-muted/50" />
-                                                    <div className="min-w-0">
-                                                        <p className="truncate font-medium">{t.descricao}</p>
-                                                        <p className="text-[10px] text-muted-foreground">
-                                                            {format(new Date(t.data_transacao), 'dd MMM')}
-                                                            {t.is_installment && ` • ${t.installment_number}/${t.total_installments}`}
-                                                        </p>
-                                                    </div>
+                                    <span className="text-xs font-medium">R$ {data.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="space-y-1">
+                                    {data.transactions.map((t) => (
+                                        <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors text-sm">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className="w-1 h-8 rounded-full bg-muted/50" />
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-medium">{t.descricao}</p>
+                                                    <p className="text-[10px] text-muted-foreground">
+                                                        {format(new Date(t.data_transacao), 'dd MMM')}
+                                                        {t.is_installment && ` • ${t.installment_number}/${t.total_installments}`}
+                                                    </p>
                                                 </div>
-                                                <span className="font-light whitespace-nowrap">
-                                                    R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                </span>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </ScrollArea>
-
-                {/* Actions Footer */}
-                <div className="p-4 bg-muted/20 border-t border-border mt-auto">
-                    <div className="flex gap-2">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button variant="outline" className="flex-1 text-xs h-9">
-                                    <Wallet className="w-3 h-3 mr-2" />
-                                    Simular
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Simular Pagamento</DialogTitle>
-                                </DialogHeader>
-                                <div className="py-4 space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm">Escolha a conta para débito:</label>
-                                        <Select value={selectedAccountForSim} onValueChange={setSelectedAccountForSim}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione uma conta" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {accounts.map(acc => (
-                                                    <SelectItem key={acc.id} value={acc.id}>
-                                                        {acc.name} (R$ {(acc as any).balance.toFixed(2)})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    {selectedAccountObj && (
-                                        <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                                            <div className="flex justify-between">
-                                                <span>Saldo Atual:</span>
-                                                <span className={(selectedAccountObj as any).balance >= 0 ? "text-green-500" : "text-red-500"}>
-                                                    R$ {(selectedAccountObj as any).balance.toFixed(2)}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between text-red-500">
-                                                <span>Fatura:</span>
-                                                <span>- R$ {currentInvoice.total.toFixed(2)}</span>
-                                            </div>
-                                            <Separator />
-                                            <div className="flex justify-between font-bold pt-2">
-                                                <span>Saldo Previsto:</span>
-                                                <span className={newBalance >= 0 ? "text-green-500" : "text-red-500"}>
-                                                    R$ {newBalance.toFixed(2)}
-                                                </span>
-                                            </div>
+                                            <span className="font-light whitespace-nowrap">
+                                                R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            </span>
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
-                            </DialogContent>
-                        </Dialog>
-
-                        {(currentInvoice.status === InvoiceStatus.CLOSED || currentInvoice.status === InvoiceStatus.OVERDUE) && onPayInvoice && (
-                            <Button
-                                className="flex-1 text-xs h-9"
-                                style={{ backgroundColor: cardColor }}
-                                onClick={() => onPayInvoice(currentInvoice)}
-                            >
-                                <CheckCircle2 className="w-3 h-3 mr-2" />
-                                Pagar
-                            </Button>
-                        )}
-                    </div>
+                            </div>
+                        );
+                    })}
                 </div>
+            </ScrollArea>
+
+            {/* Actions Footer */}
+            <div className="p-4 bg-muted/20 border-t border-border mt-auto">
+                <div className="flex gap-2">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="flex-1 text-xs h-9">
+                                <Wallet className="w-3 h-3 mr-2" />
+                                Simular
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Simular Pagamento</DialogTitle>
+                            </DialogHeader>
+                            <div className="py-4 space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm">Escolha a conta para débito:</label>
+                                    <Select value={selectedAccountForSim} onValueChange={setSelectedAccountForSim}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione uma conta" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {accounts.map(acc => (
+                                                <SelectItem key={acc.id} value={acc.id}>
+                                                    {acc.name} (R$ {(acc as any).balance.toFixed(2)})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {selectedAccountObj && (
+                                    <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span>Saldo Atual:</span>
+                                            <span className={(selectedAccountObj as any).balance >= 0 ? "text-green-500" : "text-red-500"}>
+                                                R$ {(selectedAccountObj as any).balance.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-red-500">
+                                            <span>Fatura:</span>
+                                            <span>- R$ {currentInvoice.total.toFixed(2)}</span>
+                                        </div>
+                                        <Separator />
+                                        <div className="flex justify-between font-bold pt-2">
+                                            <span>Saldo Previsto:</span>
+                                            <span className={newBalance >= 0 ? "text-green-500" : "text-red-500"}>
+                                                R$ {newBalance.toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {(currentInvoice.status === InvoiceStatus.CLOSED || currentInvoice.status === InvoiceStatus.OVERDUE) && onPayInvoice && (
+                        <Button
+                            className="flex-1 text-xs h-9"
+                            style={{ backgroundColor: cardColor }}
+                            onClick={() => onPayInvoice(currentInvoice)}
+                        >
+                            <CheckCircle2 className="w-3 h-3 mr-2" />
+                            Pagar
+                        </Button>
+                    )}
+                </div>
+            </div>
         </Card>
     );
 }
