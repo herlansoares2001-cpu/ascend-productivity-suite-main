@@ -11,6 +11,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const apiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'Configuração de API Key (Gemini) ausente no servidor.' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const { messages, userContext, userName } = await req.json()
 
     // Análise Rápida de Dados para o System Prompt
@@ -26,6 +34,7 @@ Deno.serve(async (req) => {
 
     const systemPrompt = `
       Tu és o CTO e Sócio Estratégico do ${userName}. Não és um assistente fofo, és um parceiro de negócios focado em alta performance.
+      Data e Hora atual: ${new Date().toLocaleString('pt-PT')}
       
       DADOS REAIS DO UTILIZADOR (TEMPO REAL):
       - Finanças (Mês Atual): Gastou ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'BRL' }).format(spentMonth)} / Ganhou ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'BRL' }).format(incomeMonth)}.
@@ -41,20 +50,30 @@ Deno.serve(async (req) => {
       5. O teu objetivo é fazer o utilizador crescer, não agradar.
     `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Usando a API do Gemini via compatibilidade OpenAI
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gemini-1.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages
         ],
       }),
     })
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Gemini API Error:", errorData);
+      return new Response(JSON.stringify({ error: `Erro no Gemini: ${errorData.error?.message || 'Desconhecido'}` }), {
+        status: response.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     const data = await response.json()
     const reply = data.choices[0].message.content

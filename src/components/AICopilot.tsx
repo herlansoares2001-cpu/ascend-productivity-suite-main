@@ -50,9 +50,10 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
 
       const aiMsg = { role: 'assistant' as const, content: data.reply };
       setMessages(prev => [...prev, aiMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Erro ao conectar com o Sócio IA. Tente novamente.");
+      const errorMessage = error.message || error.error || "Erro ao conectar com o Sócio IA. Tente novamente.";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +87,8 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] rounded-lg p-3 ${msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted'
                   }`}>
                   {msg.content}
                 </div>

@@ -35,17 +35,24 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
     let spentLastMonth = 0;
     let incomeMonth = 0;
 
+    interface FinanceSummaryRow {
+        spent_today: number;
+        spent_month: number;
+        spent_last_month: number;
+        income_month: number;
+    }
+
     try {
-        // @ts-ignore
-        const { data: financeData, error: financeError } = await supabase
+        const { data, error: financeError } = await supabase
             .rpc('get_finance_summary', { p_user_id: userId });
 
-        if (!financeError && financeData && (financeData as any).length > 0) {
-            const row = (financeData as any)[0];
-            spentToday = Number(row.spent_today);
-            spentMonth = Number(row.spent_month);
-            spentLastMonth = Number(row.spent_last_month);
-            incomeMonth = Number(row.income_month);
+        if (!financeError && data && (data as any[]).length > 0) {
+            // Safe casting and checking
+            const row = (data as any[])[0] as FinanceSummaryRow;
+            spentToday = Number(row.spent_today) || 0;
+            spentMonth = Number(row.spent_month) || 0;
+            spentLastMonth = Number(row.spent_last_month) || 0;
+            incomeMonth = Number(row.income_month) || 0;
         }
     } catch (error) {
         console.warn("Erro ao buscar resumo financeiro (RPC):", error);
