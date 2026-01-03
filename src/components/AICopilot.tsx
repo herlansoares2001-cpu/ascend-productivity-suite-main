@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGlobalUserContext } from "@/lib/ai-context";
 import { FileText } from "lucide-react";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface Message {
   id: string;
@@ -35,6 +36,7 @@ export function AICopilot({ customTrigger }: AICopilotProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { totalBalance } = useFinancialData();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function AICopilot({ customTrigger }: AICopilotProps) {
       // 1. Fetch Context (RAG)
       let contextData = null;
       try {
-        contextData = await getGlobalUserContext(user.id);
+        contextData = await getGlobalUserContext(user.id, totalBalance);
         console.log("AI Context loaded:", contextData);
       } catch (err) {
         console.warn("Failed to load AI context:", err);

@@ -85,7 +85,7 @@ export function useGamification() {
             current_xp: Math.round(newXP),
             level: newLevel,
             last_active_date: new Date().toISOString()
-        } as any).eq('id', user.id);
+        }).eq('id', user.id);
         // Cast as any because types.ts might not be fully updated yet
 
         if (!error) {

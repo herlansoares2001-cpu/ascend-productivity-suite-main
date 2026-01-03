@@ -180,6 +180,10 @@ export type Database = {
           id: string
           pomodoro_duration?: number | null
           updated_at?: string
+          current_xp?: number
+          level?: number
+          current_streak?: number
+          last_active_date?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -189,6 +193,10 @@ export type Database = {
           id?: string
           pomodoro_duration?: number | null
           updated_at?: string
+          current_xp?: number
+          level?: number
+          current_streak?: number
+          last_active_date?: string | null
         }
         Relationships: []
       }

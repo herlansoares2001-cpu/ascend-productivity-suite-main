@@ -26,7 +26,7 @@ export interface UserContextData {
     timestamp: string;
 }
 
-export async function getGlobalUserContext(userId: string): Promise<UserContextData> {
+export async function getGlobalUserContext(userId: string, currentBalance?: number): Promise<UserContextData> {
     const now = new Date();
     const todayStr = format(now, 'yyyy-MM-dd');
     const startMonthStr = format(startOfMonth(now), 'yyyy-MM-dd');
@@ -42,13 +42,10 @@ export async function getGlobalUserContext(userId: string): Promise<UserContextD
     let spentMonth = 0;
     let spentLastMonth = 0;
     let incomeMonth = 0;
-    let balance = 0; // Total balance might require summing ALL history or checking Accounts table.
+    // Prefer passed balance, otherwise 0 (or could try to fetch accounts sum if needed, but client passing is standard)
+    const balance = currentBalance !== undefined ? currentBalance : 0;
 
-    // Fetch Accounts for Total Balance
-    const { data: accounts } = await supabase.from('accounts').select('initial_balance, id').eq('user_id', userId);
-    // Note: To get real total balance we'd need to sum everything. For simplicity context, we can estimate or just use Month flow.
-    // Let's rely on transactions for Flow, and accounts for Balance if available.
-    // But since account-engine logic is complex, let's stick to simple sums for the Context "Snapshot".
+    // ... rest of logic for spentToday etc ...
 
     const currentMonth = now.getMonth();
     const lastMonth = subMonths(now, 1).getMonth();
@@ -105,25 +102,11 @@ export async function getGlobalUserContext(userId: string): Promise<UserContextD
         .eq('completed', false);
 
     const pendingTasks = tasks || [];
-    // Simple priority logic: Just take top 3 (if priority column existed we'd use it, for now just title)
-    // Assuming we don't have priority column based on previous file reads (supabase types didn't show priority on tasks). 
-    // Wait, let me check supabase types again for Tasks.
-    // Step 982: Tasks Row: { completed, created_at, id, title, updated_at, user_id }. No priority.
     const topTasks = pendingTasks.slice(0, 3).map(t => t.title);
-
-    // --- 4. Calendar ---
-    // Assuming google-calendar events are stored in local cache or we fetch them?
-    // The previous context "useFinancialData" didn't handle calendar events.
-    // Calendar is strictly Google Calendar Integration (Frontend). 
-    // Since this runs on Client, we theoretically *could* access the google calendar cache if exposed.
-    // But `src/services/google-calendar.ts` manages it.
-    // For now, I'll return a placeholder or skip calendar if strictly requires Google API call which might be expensive here.
-    // Or I can omit it if too complex. The prompt asked for "Próximos eventos".
-    // I will omit for now to ensure stability, or check if I can easily get it.
 
     return {
         finance: {
-            balance: 0, // Placeholder, calculated properly elsewhere
+            balance,
             spentToday,
             spentMonth,
             spentLastMonth,
