@@ -245,7 +245,12 @@ const Finances = () => {
           </div>
           <CreditCardWidget card={selectedCard} limiteInfo={limite} faturaAtual={fatura} />
           <Button className="w-full" onClick={() => setIsAddTransactionOpen(true)} style={{ backgroundColor: selectedCard.cor_hex }}><Plus className="w-4 h-4 mr-2" />Compra neste Cartão</Button>
-          <InvoiceView invoices={invs} onPayInvoice={(inv) => { setSelectedInvoice(inv); setIsPayInvoiceOpen(true); }} cardColor={selectedCard.cor_hex} />
+          <InvoiceView
+            invoices={invs}
+            onPayInvoice={(inv) => { setSelectedInvoice(inv); setIsPayInvoiceOpen(true); }}
+            cardColor={selectedCard.cor_hex}
+            limitInfo={{ total: limite.limite_total, used: limite.limite_usado, available: limite.limite_disponivel }}
+          />
         </div>
       );
     }

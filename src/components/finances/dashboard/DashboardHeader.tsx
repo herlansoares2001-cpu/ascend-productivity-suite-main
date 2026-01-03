@@ -3,6 +3,7 @@ import { Eye, EyeOff, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Walle
 import { format, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { UserLevelWidget } from "@/components/gamification/UserLevelWidget";
 
 interface DashboardHeaderProps {
     totals: {
@@ -42,6 +43,9 @@ export function DashboardHeader({ totals, privacyMode, onTogglePrivacy, currentD
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <div className="hidden lg:block mr-2">
+                        <UserLevelWidget />
+                    </div>
                     {onNewTransaction && (
                         <Button size="sm" onClick={onNewTransaction} className="hidden md:flex">
                             <Plus className="w-4 h-4 mr-2" />
