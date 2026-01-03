@@ -10,7 +10,7 @@ export interface CalendarEvent {
     end: Date;
     allDay?: boolean;
     resource?: any;
-    type: 'event' | 'habit' | 'task';
+    type: 'event' | 'habit' | 'task' | 'finance';
     color?: string;
 }
 
