@@ -164,25 +164,37 @@ export function TransactionForm({ onSubmit, onCancel, initialData, isLoading, ac
         <Label>Conta</Label>
         <Select value={accountId} onValueChange={setAccountId} required>
           <SelectTrigger>
-            <SelectValue placeholder="Selecione a conta" />
+            <SelectValue placeholder={accounts.length === 0 ? "Nenhuma conta cadastrada" : "Selecione a conta"} />
           </SelectTrigger>
           <SelectContent>
-            {getActiveAccounts().map((acc) => {
-              const Icon = getAccountIcon(acc.type);
-              return (
-                <SelectItem key={acc.id} value={acc.id}>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: acc.color }}
-                    />
-                    <span>{acc.name}</span>
-                  </div>
-                </SelectItem>
-              );
-            })}
+            {accounts.length === 0 ? (
+              <div className="p-2 text-center">
+                <p className="text-xs text-muted-foreground mb-2">Você precisa de uma conta.</p>
+                <Button variant="outline" size="sm" className="w-full text-xs h-8" onClick={() => window.location.href = '/finances?new_account=true'}>
+                  Cadastrar Conta
+                </Button>
+              </div>
+            ) : (
+              <>
+                {getActiveAccounts().map((acc) => {
+                  const Icon = getAccountIcon(acc.type);
+                  return (
+                    <SelectItem key={acc.id} value={acc.id}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: acc.color }}
+                        />
+                        <span>{acc.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </>
+            )}
           </SelectContent>
         </Select>
+        {accounts.length === 0 && <p className="text-[10px] text-destructive">Cadastre uma conta antes de continuar.</p>}
       </div>
 
       <div className="space-y-2">

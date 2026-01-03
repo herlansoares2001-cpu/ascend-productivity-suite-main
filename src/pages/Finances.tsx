@@ -67,7 +67,7 @@ const Finances = () => {
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
   // Hook Centralizado
-  const { transactions: financeTransactions, accounts, createTransaction, updateTransaction, deleteTransaction, createAccount, updateAccount, refreshData, isLoading, totalBalance } = useFinancialData();
+  const { transactions: financeTransactions, accounts, cards: realCards, createTransaction, updateTransaction, deleteTransaction, createAccount, updateAccount, createCard, refreshData, isLoading, totalBalance } = useFinancialData();
   const { awardXP } = useGamification();
 
   // UI States
@@ -82,7 +82,22 @@ const Finances = () => {
   const [privacyMode, setPrivacyMode] = useState(false);
 
   // Credit Cards
-  const [cards, setCards] = useState<CreditCard[]>(MOCK_CARDS);
+  const cards: CreditCard[] = useMemo(() => {
+    if (!realCards) return [];
+    return realCards.map(c => ({
+      id: c.id,
+      nome: c.name,
+      bandeira: c.brand as any,
+      limite_total: c.limit_amount,
+      dia_fechamento: c.closing_day,
+      dia_vencimento: c.due_day,
+      cor_hex: c.color,
+      created_at: c.created_at || new Date().toISOString(),
+      updated_at: c.created_at || new Date().toISOString(),
+      user_id: c.user_id
+    }));
+  }, [realCards]);
+
   const [creditTransactions, setCreditTransactions] = useState<CreditCardTransaction[]>(MOCK_CREDIT_TRANSACTIONS);
   const [selectedCardId, setSelectedCardId] = useState<string>(''); // Default: todos (revisado)
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
@@ -216,22 +231,30 @@ const Finances = () => {
   };
 
   // --- Handlers Cartão ---
-  const handleCreateCard = () => {
-    if (!newCardData.nome || !newCardData.limite) return;
-    const newCard: CreditCard = {
-      id: crypto.randomUUID(),
-      nome: newCardData.nome,
-      limite_total: parseFloat(newCardData.limite),
-      dia_vencimento: parseInt(newCardData.dia_vencimento || '10'),
-      dia_fechamento: 5,
-      cor_hex: newCardData.cor,
-      bandeira: CardBrand.VISA,
-      user_id: 'user1', created_at: new Date().toISOString(), updated_at: new Date().toISOString()
-    };
-    setCards([...cards, newCard]);
-    setIsNewCardOpen(false);
-    setNewCardData({ nome: '', limite: '', dia_vencimento: '', cor: '#000000' });
-    toast.success("Cartão adicionado!");
+  const handleCreateCard = async () => {
+    console.log("Tentando criar cartão...", newCardData);
+    if (!newCardData.nome || !newCardData.limite) {
+      toast.error("Nome e Limite são obrigatórios");
+      return;
+    }
+
+    try {
+      await createCard.mutateAsync({
+        name: newCardData.nome,
+        limit_amount: parseFloat(newCardData.limite),
+        due_day: parseInt(newCardData.dia_vencimento || '10'),
+        closing_day: 5, // Default logic needed or input
+        color: newCardData.cor,
+        brand: CardBrand.VISA // Default
+      });
+      console.log("Cartão criado com sucesso!");
+      setIsNewCardOpen(false);
+      setNewCardData({ nome: '', limite: '', dia_vencimento: '', cor: '#000000' });
+      // toast success handled by hook
+      awardXP(50, "Novo Cartão Cadastrado");
+    } catch (error) {
+      console.error("Erro ao criar cartão:", error);
+    }
   };
 
   // Credit Cards View Logic

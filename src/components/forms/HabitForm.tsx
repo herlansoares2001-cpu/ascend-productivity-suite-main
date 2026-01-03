@@ -112,56 +112,68 @@ export function HabitForm({ onSubmit, onCancel, initialData, isLoading }: HabitF
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    console.log("Submitting Habit Form...", { name, category, scheduleType });
 
-    let finalCategory = category;
-    if (isNewCategory && newCategoryName.trim()) {
-      const newCat = addHabitCategory(newCategoryName.trim());
-      finalCategory = newCat.id;
-    }
-
-    const schedule: HabitSchedule = {
-      type: scheduleType,
-      frequency,
-      times: simpleTimes.filter(t => t),
-      activeDays,
-      customDays: {} // Filter empty
-    };
-
-    if (scheduleType === 'custom') {
-      Object.entries(customDays).forEach(([day, times]) => {
-        const validTimes = times.filter(t => t);
-        if (validTimes.length > 0) {
-          schedule.customDays[day] = validTimes;
-        }
-      });
-    }
-
-    // Check Conflicts
-    const conflictMsg = checkForConflicts(name, schedule);
-    if (conflictMsg) {
-      toast.warning("Atenção: Conflito de Horário", {
-        description: conflictMsg,
-        action: {
-          label: "Criar mesmo assim",
-          onClick: () => onSubmit({
-            name: name.trim(),
-            category: finalCategory,
-            schedule
-          })
-        },
-        duration: 8000,
-      });
+    if (!name.trim()) {
+      toast.error("O nome do hábito é obrigatório.");
       return;
     }
 
-    onSubmit({
-      name: name.trim(),
-      category: finalCategory,
-      schedule
-    });
+    try {
+      let finalCategory = category;
+      if (isNewCategory && newCategoryName.trim()) {
+        const newCat = addHabitCategory(newCategoryName.trim());
+        finalCategory = newCat.id;
+      }
+
+      const schedule: HabitSchedule = {
+        type: scheduleType,
+        frequency,
+        times: simpleTimes.filter(t => t),
+        activeDays,
+        customDays: {} // Filter empty
+      };
+
+      if (scheduleType === 'custom') {
+        Object.entries(customDays).forEach(([day, times]) => {
+          const validTimes = times.filter(t => t);
+          if (validTimes.length > 0) {
+            schedule.customDays[day] = validTimes;
+          }
+        });
+      }
+
+      // Check Conflicts
+      const conflictMsg = checkForConflicts(name, schedule);
+      if (conflictMsg) {
+        toast.warning("Atenção: Conflito de Horário", {
+          description: conflictMsg,
+          action: {
+            label: "Criar mesmo assim",
+            onClick: () => onSubmit({
+              name: name.trim(),
+              category: finalCategory,
+              schedule
+            })
+          },
+          duration: 8000,
+        });
+        return;
+      }
+
+      await onSubmit({
+        name: name.trim(),
+        category: finalCategory,
+        schedule
+      });
+      console.log("Habit Submitted Successfully");
+
+    } catch (error) {
+      console.error("Error submitting habit:", error);
+      toast.error("Erro inesperado ao salvar hábito.");
+    }
   };
 
   return (
