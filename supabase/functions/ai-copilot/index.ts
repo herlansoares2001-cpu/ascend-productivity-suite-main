@@ -50,33 +50,35 @@ Deno.serve(async (req) => {
       5. O teu objetivo é fazer o utilizador crescer, não agradar.
     `;
 
-    // Usando a API do Gemini via compatibilidade OpenAI
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+    // Construir o prompt completo
+    const fullPrompt = `${systemPrompt}\n\nUsuário: ${messages[messages.length - 1].content}`;
+
+    // Usando a API REST do Gemini (modo nativo)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gemini-1.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages
-        ],
+        contents: [{
+          parts: [{
+            text: fullPrompt
+          }]
+        }]
       }),
     })
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Gemini API Error:", errorData);
-      return new Response(JSON.stringify({ error: `Erro no Gemini: ${errorData.error?.message || 'Desconhecido'}` }), {
+      const errorText = await response.text();
+      console.error("Gemini API Error:", errorText);
+      return new Response(JSON.stringify({ error: `Erro no Gemini: ${errorText || 'Desconhecido'}` }), {
         status: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     const data = await response.json()
-    const reply = data.choices[0].message.content
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

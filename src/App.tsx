@@ -6,7 +6,6 @@ import { BottomNav } from "@/components/BottomNav";
 import { PageTransition } from "@/components/PageTransition";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AICopilot } from "@/components/AICopilot";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -14,11 +13,6 @@ import Habits from "./pages/Habits";
 import Finances from "./pages/Finances";
 import CalendarPage from "./pages/CalendarPage";
 import More from "./pages/More";
-import Books from "./pages/Books";
-import Workout from "./pages/Workout";
-import Diet from "./pages/Diet";
-import Notes from "./pages/Notes";
-import Goals from "./pages/Goals";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -59,10 +53,7 @@ function AppContent() {
         </Routes>
       </PageTransition>
       {user && !isLoading && (
-        <>
-          <BottomNav />
-          <AICopilot />
-        </>
+        <BottomNav />
       )}
 
     </div>

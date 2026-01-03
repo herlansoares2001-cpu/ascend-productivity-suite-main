@@ -23,7 +23,7 @@ export interface HabitCategory {
 }
 
 // Default Categories
-let DEFAULT_CATEGORIES = [
+const DEFAULT_CATEGORIES = [
     { id: "health", name: "Saúde", color: "#A2F7A1" },
     { id: "work", name: "Trabalho", color: "#3498DB" },
     { id: "learning", name: "Estudo", color: "#F39C12" },

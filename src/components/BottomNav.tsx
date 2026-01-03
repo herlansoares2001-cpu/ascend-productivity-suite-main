@@ -5,10 +5,6 @@ import {
   CheckCircle2,
   Wallet,
   Calendar,
-  BookOpen,
-  Dumbbell,
-  FileText,
-  Target,
   Sparkles
 } from "lucide-react";
 import { AICopilot } from "@/components/AICopilot";

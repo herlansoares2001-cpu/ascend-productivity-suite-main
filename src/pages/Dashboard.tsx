@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { User, CheckCircle, Wallet, Dumbbell, BookOpen, Target, LogOut, Plus } from "lucide-react";
+import { CheckCircle, Wallet, Dumbbell, BookOpen, Target, Plus } from "lucide-react";
 import { KPICard } from "@/components/widgets/KPICard";
 import { WeeklyCalendar } from "@/components/widgets/WeeklyCalendar";
 import { TaskListWidget } from "@/components/widgets/TaskListWidget";

@@ -117,7 +117,7 @@ export const GoogleCalendarService = {
             // B. Sync Events
             const currentEvents = getStoredEvents();
             let eventsUpdated = false;
-            let newEventsList = [...currentEvents];
+            const newEventsList = [...currentEvents];
 
             // Filter for Google Calendars that are visible
             const activeGoogleCals = mergedCalendars.filter(c => c.provider === 'google' && c.visible && c.googleId);
