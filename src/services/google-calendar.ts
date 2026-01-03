@@ -5,7 +5,7 @@ import {
     getStoredEvents,
     saveStoredEvents,
     CalendarEventData
-} from "@/lib/event-storage";
+} from "@/storage/event-storage";
 
 const SESSION_STORAGE_TOKEN_KEY = "google_provider_token_secure";
 

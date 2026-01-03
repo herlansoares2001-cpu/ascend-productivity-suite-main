@@ -33,8 +33,26 @@ Deno.serve(async (req) => {
       throw new Error('CONFIG_ERROR: Variable GEMINI_API_KEY is missing.')
     }
 
-    const payload: RequestPayload = await req.json()
+    let payload: RequestPayload;
+    try {
+      payload = await req.json()
+    } catch (e) {
+      throw new Error("Invalid JSON body.");
+    }
+
     const { messages, userContext, userName } = payload
+
+    if (!messages || !Array.isArray(messages)) {
+      throw new Error("Field 'messages' is required and must be an array.");
+    }
+
+    if (!userContext || Object.keys(userContext).length === 0) {
+      return new Response(JSON.stringify({
+        reply: "Não consegui acessar seus dados financeiros agora. Por favor, tente recarregar a página."
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // --- 1. System Prompt Refinado ---
     const systemPrompt = `

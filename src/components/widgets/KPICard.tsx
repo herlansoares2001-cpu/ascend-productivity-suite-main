@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 interface KPICardProps {
   icon: LucideIcon;
   label: string;
-  value: string;
+  value: string | React.ReactNode;
   subValue?: string;
   color?: "default" | "lime" | "green" | "orange" | "blue";
   to?: string;

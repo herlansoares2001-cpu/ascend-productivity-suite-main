@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHabits } from "@/hooks/useHabits";
 import { useCalendar } from "@/hooks/useCalendar";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TransactionForm } from "@/components/forms/TransactionForm";
 import { toast } from "sonner";
@@ -129,7 +130,7 @@ const Dashboard = () => {
             <KPICard
               icon={Wallet}
               label="Saldo (Mês)"
-              value={`R$ ${monthlyBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+              value={isLoading ? <Skeleton className="h-7 w-24 bg-primary/20" /> : `R$ ${monthlyBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
               subValue="Receita - Despesa"
               color="green"
               to="/finances"
@@ -152,10 +153,12 @@ const Dashboard = () => {
             <Link to="/finances" className="text-xs text-primary flex items-center gap-1">Ver detalhes <TrendingUp className="w-3 h-3" /></Link>
           </div>
           <div className="space-y-4">
-            <Suspense fallback={<ChartSkeleton />}>
-              <CashFlowChart data={cashFlowData} />
-            </Suspense>
-            <div className="bg-card border rounded-2xl p-5">
+            <div className="min-h-[300px]">
+              <Suspense fallback={<ChartSkeleton />}>
+                <CashFlowChart data={cashFlowData} />
+              </Suspense>
+            </div>
+            <div className="bg-card border rounded-2xl p-5 min-h-[300px]">
               <Suspense fallback={<CategoryChartSkeleton />}>
                 <CategoryChart data={dashboardData.categoryDistribution} privacyMode={false} />
               </Suspense>

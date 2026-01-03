@@ -3,7 +3,7 @@ import { LimiteInfo } from "@/types/credit-card";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { CreditCard as CreditCardIcon, TrendingUp, Calendar } from "lucide-react";
-import { calcularMelhorDiaCompra } from "@/lib/credit-card-engine";
+import { calcularMelhorDiaCompra } from "@/core/finance/credit-card-engine";
 
 interface CreditCardWidgetProps {
     card: CreditCard;

@@ -3,7 +3,7 @@ import { Search, MessagesSquare, Star, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FAQ_DATA } from "@/lib/badges";
+import { FAQ_DATA } from "@/core/habits/badges";
 
 export function HelpSection() {
     const [search, setSearch] = useState("");
