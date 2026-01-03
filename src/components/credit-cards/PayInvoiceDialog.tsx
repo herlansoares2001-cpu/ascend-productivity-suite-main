@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Invoice } from "@/types/credit-card";
+import { Account } from "@/types/finance";
 import { AlertCircle, CheckCircle2, Wallet } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,15 +15,9 @@ interface PayInvoiceDialogProps {
     invoice: Invoice | null;
     cardName: string;
     cardColor: string;
+    accounts: Account[]; // Contas reais
     onConfirmPayment: (contaId: string, valor: number) => void;
 }
-
-// Mock de contas correntes - em produção viria do banco de dados
-const CONTAS_MOCK = [
-    { id: '1', nome: 'Conta Corrente Principal', banco: 'Nubank', saldo: 5000 },
-    { id: '2', nome: 'Conta Poupança', banco: 'Inter', saldo: 10000 },
-    { id: '3', nome: 'Conta Salário', banco: 'Itaú', saldo: 3500 },
-];
 
 export function PayInvoiceDialog({
     open,
@@ -30,6 +25,7 @@ export function PayInvoiceDialog({
     invoice,
     cardName,
     cardColor,
+    accounts,
     onConfirmPayment
 }: PayInvoiceDialogProps) {
     const [contaSelecionada, setContaSelecionada] = useState<string>("");
@@ -41,19 +37,17 @@ export function PayInvoiceDialog({
         if (!contaSelecionada) return;
 
         setIsProcessing(true);
-
-        // Simula processamento
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        onConfirmPayment(contaSelecionada, invoice.total);
-
+        // Chama a função externa que fará a lógica real (transação, update, etc.)
+        await onConfirmPayment(contaSelecionada, invoice.total);
         setIsProcessing(false);
         setContaSelecionada("");
         onOpenChange(false);
     };
 
-    const contaInfo = CONTAS_MOCK.find(c => c.id === contaSelecionada);
-    const saldoSuficiente = contaInfo ? contaInfo.saldo >= invoice.total : false;
+    const contaInfo = accounts.find(c => c.id === contaSelecionada);
+    // Verificar saldo: current_balance pode ser string ou number, garantir conversão
+    const saldoAtual = contaInfo ? Number(contaInfo.current_balance) : 0;
+    const saldoSuficiente = contaInfo ? saldoAtual >= invoice.total : false;
 
     const monthName = format(
         new Date(invoice.ano_referencia, invoice.mes_referencia - 1),
@@ -112,15 +106,15 @@ export function PayInvoiceDialog({
                                 <SelectValue placeholder="Selecione uma conta" />
                             </SelectTrigger>
                             <SelectContent>
-                                {CONTAS_MOCK.map((conta) => (
+                                {accounts.map((conta) => (
                                     <SelectItem key={conta.id} value={conta.id}>
-                                        <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center justify-between w-full gap-4">
                                             <div>
-                                                <p className="font-regular">{conta.nome}</p>
-                                                <p className="text-xs text-muted-foreground">{conta.banco}</p>
+                                                <p className="font-regular">{conta.name}</p>
+                                                <p className="text-xs text-muted-foreground capitalize">{conta.type === 'checking' ? 'Conta Corrente' : conta.type}</p>
                                             </div>
-                                            <span className="text-sm ml-4">
-                                                R$ {conta.saldo.toLocaleString('pt-BR', {
+                                            <span className="text-sm ml-auto">
+                                                R$ {Number(conta.current_balance).toLocaleString('pt-BR', {
                                                     minimumFractionDigits: 2,
                                                     maximumFractionDigits: 2
                                                 })}
@@ -155,7 +149,7 @@ export function PayInvoiceDialog({
                                     Saldo disponível
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Após o pagamento, o saldo será de R$ {(contaInfo!.saldo - invoice.total).toLocaleString('pt-BR', {
+                                    Após o pagamento, o saldo será de R$ {(saldoAtual - invoice.total).toLocaleString('pt-BR', {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2
                                     })}

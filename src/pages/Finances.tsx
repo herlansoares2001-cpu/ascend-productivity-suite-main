@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, TrendingUp, TrendingDown, Plus, Coffee, ShoppingCart, Car, Utensils, Home, Gamepad2, MoreVertical, Pencil, Trash2, Briefcase,
@@ -51,15 +51,6 @@ const CashFlowChartLazy = lazy(() => import("@/components/finances/CashFlowChart
 const CategoryChartLazy = lazy(() => import("@/components/finances/dashboard/CategoryChart").then(m => ({ default: m.CategoryChart })));
 
 
-const MOCK_CARDS: CreditCard[] = [
-  { id: '1', nome: 'Nubank Ultravioleta', bandeira: CardBrand.MASTERCARD, limite_total: 15000, dia_fechamento: 10, dia_vencimento: 17, cor_hex: '#8A05BE', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: 'user1' },
-  { id: '2', nome: 'Inter Gold', bandeira: CardBrand.VISA, limite_total: 8000, dia_fechamento: 5, dia_vencimento: 15, cor_hex: '#FF7A00', created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: 'user1' }
-];
-
-const MOCK_CREDIT_TRANSACTIONS: CreditCardTransaction[] = [
-  { id: '1', card_id: '1', valor: 150.50, data_transacao: new Date().toISOString(), descricao: 'Supermercado', categoria_id: TransactionCategory.FOOD, is_installment: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), user_id: 'user1' }
-];
-
 const Finances = () => {
   const categoriesList = getCategories();
   const [activeTab, setActiveTab] = useState<"overview" | "transactions" | "cards" | "accounts">("overview");
@@ -98,7 +89,7 @@ const Finances = () => {
     }));
   }, [realCards]);
 
-  const [creditTransactions, setCreditTransactions] = useState<CreditCardTransaction[]>(MOCK_CREDIT_TRANSACTIONS);
+  const [creditTransactions, setCreditTransactions] = useState<CreditCardTransaction[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>(''); // Default: todos (revisado)
   const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
   const [isPayInvoiceOpen, setIsPayInvoiceOpen] = useState(false);
@@ -136,7 +127,7 @@ const Finances = () => {
   }, [financeTransactions, activeAccounts, cards, creditTransactions, dashboardDate]);
 
   // --- Handlers Transações ---
-  const handleCreate = async (data: any) => {
+  const handleCreate = useCallback(async (data: any) => {
     try {
       let txsToCreate: any[] = [];
       const basePayload = {
@@ -187,9 +178,9 @@ const Finances = () => {
       // refreshData(); // Handled by hook
       setIsSheetOpen(false);
     } catch (e) { console.error(e); toast.error("Erro ao criar"); }
-  };
+  }, [createTransaction, awardXP]);
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = useCallback(async (data: any) => {
     if (!editingTransaction) return;
     try {
       await updateTransaction.mutateAsync({
@@ -206,7 +197,7 @@ const Finances = () => {
       setIsSheetOpen(false);
       setEditingTransaction(null);
     } catch { toast.error("Erro ao atualizar"); }
-  };
+  }, [editingTransaction, updateTransaction]);
 
   const toggleStatus = (t: FinanceTransaction) => {
     const newPaid = !t.is_paid && t.status !== 'paid'; // Toggle logic (if status is used as truth)
@@ -222,16 +213,17 @@ const Finances = () => {
   };
 
   // --- Handlers Contas ---
-  const handleCreateAccount = async (newAccount: any) => {
+  const handleCreateAccount = useCallback(async (newAccount: any) => {
     createAccount.mutate(newAccount);
-  };
-  const handleUpdateAccount = async (updatedData: any) => {
+  }, [createAccount]);
+
+  const handleUpdateAccount = useCallback(async (updatedData: any) => {
     if (!editingAccount) return;
     updateAccount.mutate({ id: editingAccount.id, ...updatedData });
-  };
+  }, [editingAccount, updateAccount]);
 
   // --- Handlers Cartão ---
-  const handleCreateCard = async () => {
+  const handleCreateCard = useCallback(async () => {
     console.log("Tentando criar cartão...", newCardData);
     if (!newCardData.nome || !newCardData.limite) {
       toast.error("Nome e Limite são obrigatórios");
@@ -255,7 +247,7 @@ const Finances = () => {
     } catch (error) {
       console.error("Erro ao criar cartão:", error);
     }
-  };
+  }, [newCardData, createCard, awardXP]);
 
   // Credit Cards View Logic
   const selectedCard = cards.find(c => c.id === selectedCardId);
@@ -489,7 +481,38 @@ const Finances = () => {
           toast.success('Transação adicionada!');
         }
       }} />
-      <PayInvoiceDialog open={isPayInvoiceOpen} onOpenChange={setIsPayInvoiceOpen} invoice={selectedInvoice} cardName={selectedCard?.nome || ''} cardColor={selectedCard?.cor_hex || ''} onConfirmPayment={(contaId, valor) => { toast.success(`Fatura paga! R$ ${valor.toFixed(2)} debitado.`); }} />
+      <PayInvoiceDialog
+        open={isPayInvoiceOpen}
+        onOpenChange={setIsPayInvoiceOpen}
+        invoice={selectedInvoice}
+        cardName={selectedCard?.nome || ''}
+        cardColor={selectedCard?.cor_hex || ''}
+        accounts={activeAccounts}
+        onConfirmPayment={async (contaId, valor) => {
+          try {
+            await createTransaction.mutateAsync({
+              description: `Pagamento Fatura ${selectedCard?.nome}`,
+              amount: valor,
+              type: 'expense',
+              category: 'others', // Ou criar categoria 'invoice_payment'
+              transaction_date: format(new Date(), "yyyy-MM-dd"),
+              account_id: contaId,
+              is_paid: true,
+              status: 'paid',
+              is_recurring: false
+            });
+
+            // TODO: Aqui deveria vir uma chamada para marcar a fatura como paga no backend
+            // Como ainda não temos endpoint específico de "pay_invoice", o saldo da conta será debitado
+            // e isso já reflete na realidade financeira do usuário.
+
+            toast.success(`Pagamento de R$ ${valor.toFixed(2)} registrado com sucesso!`);
+          } catch (error) {
+            console.error(error);
+            toast.error("Erro ao registrar pagamento da fatura.");
+          }
+        }}
+      />
     </div>
   );
 };

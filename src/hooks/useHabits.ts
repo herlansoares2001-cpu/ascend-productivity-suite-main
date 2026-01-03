@@ -144,7 +144,8 @@ export function useHabits() {
 
   const createHabit = useMutation({
     mutationFn: async (data: { name: string; category: string; schedule: HabitSchedule }) => {
-      if (!user) throw new Error("Not authenticated");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
       const { data: newHabit, error } = await supabase
         .from("habits")
@@ -152,7 +153,10 @@ export function useHabits() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating habit (DB):", error);
+        throw error;
+      }
       if (!newHabit) throw new Error("No data returned");
 
       saveHabitMetadata(newHabit.id, {
@@ -166,8 +170,9 @@ export function useHabits() {
       queryClient.invalidateQueries({ queryKey: ["habits"] });
       toast.success("Hábito criado!");
     },
-    onError: () => {
-      toast.error("Erro ao criar hábito");
+    onError: (e: any) => {
+      console.error("Error creating habit:", e);
+      toast.error(`Erro ao criar hábito: ${e.message || "Erro desconhecido"}`);
     },
   });
 

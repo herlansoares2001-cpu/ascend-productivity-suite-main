@@ -32,19 +32,28 @@ export function useAccounts() {
 
     const createAccount = useMutation({
         mutationFn: async (newAccount: Omit<Account, "id" | "user_id" | "current_balance" | "created_at" | "updated_at">) => {
-            if (!user) throw new Error("User not found");
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
             const { data, error } = await supabase.from('accounts').insert({
                 user_id: user.id,
                 ...newAccount
             }).select().single();
-            if (error) throw error;
+
+            if (error) {
+                console.error("Error creating account:", error);
+                throw error;
+            }
             return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['accounts'] });
             toast.success("Conta criada!");
         },
-        onError: (e) => toast.error("Erro ao criar conta: " + e.message)
+        onError: (e: any) => {
+            console.error("Error creating account (mutation):", e);
+            toast.error(`Erro ao criar conta: ${e.message || "Erro desconhecido"}`);
+        }
     });
 
     const updateAccount = useMutation({

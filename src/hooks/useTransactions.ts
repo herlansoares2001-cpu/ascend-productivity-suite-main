@@ -44,7 +44,8 @@ export function useTransactions() {
 
   const createTransaction = useMutation({
     mutationFn: async (data: Omit<Transaction, "id" | "user_id" | "created_at">) => {
-      if (!user) throw new Error("Not authenticated");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
 
       const { data: createdData, error } = await supabase
         .from("transactions")
@@ -58,15 +59,19 @@ export function useTransactions() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating transaction:", error);
+        throw error;
+      }
       return createdData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Transação adicionada!");
     },
-    onError: (e) => {
-      toast.error("Erro ao adicionar transação: " + e.message);
+    onError: (e: any) => {
+      console.error("Error creating transaction (mutation):", e);
+      toast.error(`Erro ao adicionar transação: ${e.message || "Erro desconhecido"}`);
     },
   });
 

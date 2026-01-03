@@ -30,19 +30,28 @@ export function useCreditCards() {
 
     const createCard = useMutation({
         mutationFn: async (newCard: Omit<CreditCard, "id" | "user_id" | "created_at">) => {
-            if (!user) throw new Error("User not found");
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Usuário não autenticado");
+
             const { data, error } = await supabase.from('credit_cards').insert({
                 user_id: user.id,
                 ...newCard
             }).select().single();
-            if (error) throw error;
+
+            if (error) {
+                console.error("Error creating credit card:", error);
+                throw error;
+            }
             return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['credit_cards'] });
             toast.success("Cartão adicionado!");
         },
-        onError: (e) => toast.error("Erro ao adicionar cartão: " + e.message)
+        onError: (e: any) => {
+            console.error("Error creating card:", e);
+            toast.error(`Erro ao adicionar cartão: ${e.message || "Erro desconhecido"}`);
+        }
     });
 
     const deleteCard = useMutation({
