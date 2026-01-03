@@ -13,77 +13,86 @@ Deno.serve(async (req) => {
   try {
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Configuração de API Key (Gemini) ausente no servidor.' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      throw new Error('A variável GEMINI_API_KEY não está configurada no Supabase.')
     }
 
     const { messages, userContext, userName } = await req.json()
 
-    // Análise Rápida de Dados para o System Prompt
-    const spentMonth = userContext?.finance?.spentMonth || 0;
-    const incomeMonth = userContext?.finance?.incomeMonth || 0;
-    const habitsScore = userContext?.habits?.score || "0/0";
-    const neglectedHabits = userContext?.habits?.neglected?.join(", ") || "Nenhum";
-
-    let financialStatus = "Neutro";
-    if (spentMonth > incomeMonth) financialStatus = "CRÍTICO: Gastos superam ganhos.";
-    else if (spentMonth > (incomeMonth * 0.8)) financialStatus = "ALERTA: Gastos próximos do limite.";
-    else financialStatus = "SAUDÁVEL: Dentro do orçamento.";
-
+    // --- 1. System Prompt Refinado com Inteligência Emocional ---
     const systemPrompt = `
-      Tu és o CTO e Sócio Estratégico do ${userName}. Não és um assistente fofo, és um parceiro de negócios focado em alta performance.
-      Data e Hora atual: ${new Date().toLocaleString('pt-PT')}
-      
-      DADOS REAIS DO UTILIZADOR (TEMPO REAL):
-      - Finanças (Mês Atual): Gastou ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'BRL' }).format(spentMonth)} / Ganhou ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'BRL' }).format(incomeMonth)}.
-      - Status Financeiro: ${financialStatus}
-      - Hábitos Hoje: ${habitsScore}.
-      - Hábitos Negligenciados (+3 dias sem fazer): ${neglectedHabits}.
-      
-      DIRETRIZES DE PERSONALIDADE:
-      1. Sê direto e conciso. Respostas curtas são melhores.
-      2. Se o status financeiro for CRÍTICO ou ALERTA, começa a resposta a cobrar uma explicação. (Ex: "Estamos a gastar mais do que ganhamos. O que se passa?")
-      3. Se houver hábitos negligenciados, sê duro. (Ex: "Vejo que largaste o ${neglectedHabits}. A disciplina é inegociável.")
-      4. Nunca inventes dados. Usa apenas o que foi fornecido acima.
-      5. O teu objetivo é fazer o utilizador crescer, não agradar.
-    `;
+Você é o CTO e Sócio Estratégico do usuário (${userName || 'Herlan'}).
+Sua personalidade: Direto, perspicaz, focado em crescimento, mas com inteligência emocional.
 
-    // Construir o prompt completo
-    const fullPrompt = `${systemPrompt}\n\nUsuário: ${messages[messages.length - 1].content}`;
+CONTEXTO DOS DADOS:
+${JSON.stringify(userContext, null, 2)}
 
-    // Usando a API REST do Gemini (modo nativo)
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: fullPrompt
-          }]
-        }]
-      }),
-    })
+REGRAS DE COMPORTAMENTO:
+
+1. **Filtro de "Zero Dados":**
+   - ANTES de citar números, verifique se eles são relevantes.
+   - Se os gastos e ganhos forem R$ 0,00 (ou próximos de zero), NÃO os mencione. Trate isso como um "Canvas em Branco" ou "Início de Ciclo".
+   - Exemplo de resposta para dados zerados: "O painel está limpo. Vamos começar a popular isso com vitórias hoje?"
+
+2. **Modo Conversacional (Small Talk):**
+   - Se a mensagem do usuário for apenas um cumprimento ("Oi", "Tudo bem", "Bom dia", "teste"), NÃO vomite o relatório de dados.
+   - Responda cordialmente, curto e devolva a bola: "Olá, ${userName || 'Herlan'}. Tudo pronto por aqui. Qual é o foco estratégico de hoje?"
+   - Se a mensagem for genérica ou de teste, seja breve e amigável.
+
+3. **Postura de CTO:**
+   - Nunca comece frases com "Como seu CTO...". Apenas aja como um.
+   - Seja breve. Vá direto ao ponto.
+   - Use os dados APENAS quando forem relevantes para a pergunta do usuário.
+
+4. **Tom de Comunicação:**
+   - Natural e humano, não robótico.
+   - Se os dados mostram algo crítico (gastos > ganhos, hábitos negligenciados), seja direto mas construtivo.
+   - Se o usuário está indo bem, reconheça e incentive.
+
+Data e hora atual: ${new Date().toLocaleString('pt-PT')}
+`;
+
+    // --- 2. Converter mensagens para o formato do Gemini ---
+    // O Gemini usa 'model' em vez de 'assistant'
+    const geminiContents = messages.map((msg: any) => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    // --- 3. Chamada à API (Modelo gemini-2.5-flash) ---
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: geminiContents,
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+          }
+        }),
+      }
+    )
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorData = await response.json().catch(() => ({}));
+      const errorText = JSON.stringify(errorData);
       console.error("Gemini API Error:", errorText);
-      return new Response(JSON.stringify({ error: `Erro no Gemini: ${errorText || 'Desconhecido'}` }), {
-        status: response.status,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      throw new Error(`Erro API Gemini (${response.status}): ${errorData.error?.message || errorData.error || 'Verifique a chave API e o modelo.'}`);
     }
 
     const data = await response.json()
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpe, não consegui gerar uma resposta.";
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta gerada.";
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+
+  } catch (error: any) {
+    console.error("Function Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,0 +1,5 @@
+[auth]
+enabled = false
+
+[functions.ai-copilot]
+verify_jwt = false

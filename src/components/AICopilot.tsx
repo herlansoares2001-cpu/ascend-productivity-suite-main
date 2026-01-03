@@ -9,6 +9,72 @@ import { getGlobalUserContext } from "@/lib/ai-context";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+// Função helper para renderizar Markdown básico de forma segura
+const renderMarkdown = (text: string) => {
+  const lines = text.split('\n');
+  const elements: JSX.Element[] = [];
+  let listItems: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+
+  const flushList = (index: number) => {
+    if (listItems.length > 0 && listType) {
+      const ListTag = listType === 'ul' ? 'ul' : 'ol';
+      elements.push(
+        <ListTag key={`list-${index}`} className="list-disc list-inside mb-2 space-y-1 ml-4">
+          {listItems.map((item, i) => (
+            <li key={i} className="ml-2" dangerouslySetInnerHTML={{ __html: item }} />
+          ))}
+        </ListTag>
+      );
+      listItems = [];
+      listType = null;
+    }
+  };
+
+  lines.forEach((line, index) => {
+    // Lista não ordenada
+    if (line.match(/^[-*]\s/)) {
+      if (listType !== 'ul') flushList(index);
+      listType = 'ul';
+      listItems.push(processInlineMarkdown(line.replace(/^[-*]\s/, '')));
+      return;
+    }
+
+    // Lista ordenada
+    if (line.match(/^\d+\.\s/)) {
+      if (listType !== 'ol') flushList(index);
+      listType = 'ol';
+      listItems.push(processInlineMarkdown(line.replace(/^\d+\.\s/, '')));
+      return;
+    }
+
+    // Finalizar lista anterior se houver
+    flushList(index);
+
+    // Linha vazia
+    if (line.trim() === '') {
+      elements.push(<div key={`br-${index}`} className="h-2" />);
+      return;
+    }
+
+    // Parágrafo normal
+    elements.push(
+      <p key={`p-${index}`} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{ __html: processInlineMarkdown(line) }} />
+    );
+  });
+
+  flushList(lines.length);
+  return <div>{elements}</div>;
+};
+
+//Helper para processar inline markdown (negrito, code)
+const processInlineMarkdown = (text: string): string => {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code class="bg-muted-foreground/10 px-1 py-0.5 rounded text-sm">$1</code>');
+};
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -90,7 +156,11 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted'
                   }`}>
-                  {msg.content}
+                  {msg.role === 'user' ? (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    renderMarkdown(msg.content)
+                  )}
                 </div>
               </div>
             ))}
