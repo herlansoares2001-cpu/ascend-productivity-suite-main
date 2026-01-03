@@ -1,4 +1,4 @@
-import { CardSummary } from "@/lib/dashboard-engine";
+import { CardSummary } from "@/core/finance/dashboard-engine";
 import { Progress } from "@/components/ui/progress";
 import { CreditCard as CardIcon } from "lucide-react";
 

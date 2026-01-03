@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BADGES, getUserBadges, saveUserBadge, UserBadge } from '@/lib/badges';
+import { BADGES, getUserBadges, saveUserBadge, UserBadge } from '@/core/habits/badges';
 
 export interface UserStats {
     daysActive: number;

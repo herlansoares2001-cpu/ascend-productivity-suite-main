@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Send, Sparkles, Loader2, Bot } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getGlobalUserContext } from "@/lib/ai-context";
+import { getGlobalUserContext } from "@/services/api/ai-context";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 

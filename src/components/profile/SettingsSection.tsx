@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Shield, Globe, Bell, Trash2, Database, Moon, Sun } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { getSettings, saveSettings, AppSettings } from "@/lib/settings-storage";
+import { getSettings, saveSettings, AppSettings } from "@/storage/settings-storage";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTransactions } from "./useTransactions";
 import { useAccounts } from "./useAccounts";
 import { useCreditCards } from "./useCreditCards"; // New Hook
-import { calculateAccountBalance } from "@/lib/account-engine";
+import { calculateAccountBalance } from "@/core/finance/account-engine";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function useFinancialData() {

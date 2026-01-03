@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { DailyBalance } from '@/lib/forecasting-engine';
+import { DailyBalance } from '@/core/finance/forecasting-engine';
 
 interface CashFlowChartProps {
     data: DailyBalance[];

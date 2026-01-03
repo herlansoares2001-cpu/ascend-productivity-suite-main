@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useHabits } from "./useHabits";
-import { HabitSchedule } from "@/lib/habit-storage";
+import { HabitSchedule } from "@/storage/habit-storage";
 import {
     getStoredEvents,
     addStoredEvent,
@@ -9,7 +9,7 @@ import {
     saveStoredCalendars,
     CalendarEventData,
     Calendar
-} from "@/lib/event-storage";
+} from "@/storage/event-storage";
 import { toast } from "sonner";
 
 export interface CalendarEvent {

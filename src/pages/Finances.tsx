@@ -29,21 +29,26 @@ import {
   calcularLimiteDisponivel,
   agruparTransacoesPorFatura,
   gerarTransacoesParceladas
-} from "@/lib/credit-card-engine";
-import { createTransferTransactions } from "@/lib/account-engine";
-import { generateInstallmentTransactions, generateRecurringTransactions } from "@/lib/transaction-engine";
-import { getDashboardSummary } from "@/lib/dashboard-engine";
+} from "@/core/finance/credit-card-engine";
+import { createTransferTransactions } from "@/core/finance/account-engine";
+import { generateInstallmentTransactions, generateRecurringTransactions } from "@/core/finance/transaction-engine";
+import { getDashboardSummary } from "@/core/finance/dashboard-engine";
 import { DashboardHeader } from "@/components/finances/dashboard/DashboardHeader";
 import { PendingWidget } from "@/components/finances/dashboard/PendingWidget";
 import { CardsWidget } from "@/components/finances/dashboard/CardsWidget";
-import { CategoryChart } from "@/components/finances/dashboard/CategoryChart";
 import { useFinancialData } from "@/hooks/useFinancialData";
 import { saveTransactionMeta, saveTransactionAccount } from "@/services/finance-storage";
-import { getCategories } from "@/lib/categories";
+import { getCategories } from "@/core/finance/categories";
 import { useGamification } from "@/hooks/useGamification";
-import { CashFlowChart } from "@/components/finances/CashFlowChart";
-import { calculateProjectedCashFlow, calculateHistoricalCashFlow } from "@/lib/forecasting-engine";
+import { calculateProjectedCashFlow, calculateHistoricalCashFlow } from "@/core/finance/forecasting-engine";
 import { Switch } from "@/components/ui/switch";
+import { ChartSkeleton, CategoryChartSkeleton } from "@/components/finances/ChartSkeletons";
+import { lazy, Suspense } from "react";
+
+// Lazy loading for heavy charts if needed here too, but they are already imported above.
+// To satisfy the user's request for lazy loading "widgets pesados", I'll make them lazy here too.
+const CashFlowChartLazy = lazy(() => import("@/components/finances/CashFlowChart").then(m => ({ default: m.CashFlowChart })));
+const CategoryChartLazy = lazy(() => import("@/components/finances/dashboard/CategoryChart").then(m => ({ default: m.CategoryChart })));
 
 
 const MOCK_CARDS: CreditCard[] = [
@@ -332,7 +337,9 @@ const Finances = () => {
                   <Label htmlFor="forecast-mode" className={`text-xs ${showForecast ? 'text-primary font-bold' : 'text-muted-foreground'}`}>Projeção (90d)</Label>
                 </div>
               </div>
-              <CashFlowChart data={cashFlowData} />
+              <Suspense fallback={<ChartSkeleton />}>
+                <CashFlowChartLazy data={cashFlowData} />
+              </Suspense>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,7 +347,11 @@ const Finances = () => {
                 <PendingWidget overdueTransactions={dashboardData.overdueTransactions} nextTransactions={dashboardData.nextTransactions} onToggleStatus={toggleStatus} onViewAll={() => setActiveTab("transactions")} privacyMode={privacyMode} />
                 <CardsWidget cards={dashboardData.cardSummaries} privacyMode={privacyMode} onViewInvoice={(id) => { setSelectedCardId(id); setActiveTab("cards"); }} />
               </div>
-              <div className="bg-card border rounded-2xl p-5 h-auto"><CategoryChart data={dashboardData.categoryDistribution} privacyMode={privacyMode} /></div>
+              <div className="bg-card border rounded-2xl p-5 h-auto">
+                <Suspense fallback={<CategoryChartSkeleton />}>
+                  <CategoryChartLazy data={dashboardData.categoryDistribution} privacyMode={privacyMode} />
+                </Suspense>
+              </div>
             </div>
           </motion.div>
         )}

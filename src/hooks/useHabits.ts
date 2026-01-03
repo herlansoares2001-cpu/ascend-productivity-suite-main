@@ -11,7 +11,7 @@ import {
   resetDailyProgress,
   HabitMetadata,
   HabitSchedule
-} from "@/lib/habit-storage";
+} from "@/storage/habit-storage";
 
 export interface Habit {
   id: string;

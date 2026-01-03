@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Account, AccountType, TransactionStatus, TransactionFrequency } from "@/types/finance";
-import { getCategories, addCategory } from "@/lib/categories";
+import { getCategories, addCategory } from "@/core/finance/categories";
 
 const getAccountIcon = (type: AccountType) => {
   switch (type) {

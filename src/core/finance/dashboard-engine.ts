@@ -2,7 +2,7 @@ import { Transaction, Account } from "@/types/finance";
 import { CreditCard, Transaction as CreditCardTransaction } from "@/types/credit-card";
 import { isSameMonth, isSameYear, parseISO, isBefore, startOfDay, endOfMonth } from "date-fns";
 import { agruparTransacoesPorFatura } from "./credit-card-engine";
-import { getCategories } from "@/lib/categories";
+import { getCategories } from "./categories";
 
 export interface DashboardSummary {
     totals: {

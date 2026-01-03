@@ -14,7 +14,7 @@ import {
   getHabitCategories,
   HabitSchedule,
   HabitCategory
-} from "@/lib/habit-storage";
+} from "@/storage/habit-storage";
 import { Plus, X } from "lucide-react";
 import { useCalendar } from "@/hooks/useCalendar";
 import { toast } from "sonner";
@@ -276,8 +276,8 @@ export function HabitForm({ onSubmit, onCancel, initialData, isLoading }: HabitF
                     type="button"
                     onClick={() => toggleDay(day.id)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-colors ${activeDays.includes(day.id)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                       }`}
                   >
                     {day.label[0]}

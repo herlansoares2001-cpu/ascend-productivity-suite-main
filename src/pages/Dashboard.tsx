@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { CheckCircle, Wallet, Dumbbell, BookOpen, Target, Plus } from "lucide-react";
+import { CheckCircle, Wallet, Dumbbell, BookOpen, Target, Plus, TrendingUp } from "lucide-react";
 import { KPICard } from "@/components/widgets/KPICard";
 import { WeeklyCalendar } from "@/components/widgets/WeeklyCalendar";
 import { TaskListWidget } from "@/components/widgets/TaskListWidget";
@@ -19,6 +19,13 @@ import { format } from "date-fns";
 import { saveTransactionMeta, saveTransactionAccount } from "@/services/finance-storage";
 import { UserLevelWidget } from "@/components/gamification/UserLevelWidget";
 import { useGamification } from "@/hooks/useGamification";
+import { ChartSkeleton, CategoryChartSkeleton } from "@/components/finances/ChartSkeletons";
+import { calculateHistoricalCashFlow } from "@/core/finance/forecasting-engine";
+import { getDashboardSummary } from "@/core/finance/dashboard-engine";
+
+// Lazy Loaded Components
+const CashFlowChart = lazy(() => import("@/components/finances/CashFlowChart").then(m => ({ default: m.CashFlowChart })));
+const CategoryChart = lazy(() => import("@/components/finances/dashboard/CategoryChart").then(m => ({ default: m.CategoryChart })));
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -41,9 +48,13 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { habits } = useHabits();
   const { getEvents } = useCalendar();
-  const { totalBalance, createTransaction, accounts, refreshData, isLoading } = useFinancialData();
+  const { transactions, totalBalance, createTransaction, accounts, refreshData, isLoading } = useFinancialData();
   const { awardXP } = useGamification();
   const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
+
+  // Derivando dados financeiros para os novos widgets
+  const cashFlowData = calculateHistoricalCashFlow(totalBalance, transactions, 7);
+  const dashboardData = getDashboardSummary(transactions, accounts, [], [], new Date());
 
   const completedHabits = habits.filter(h => h.completed).length;
 
@@ -131,6 +142,23 @@ const Dashboard = () => {
 
         <motion.section variants={itemVariants}>
           <WeeklyCalendar appointments={todayEvents} />
+        </motion.section>
+
+        <motion.section variants={itemVariants}>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="section-title mb-0"><span>Métricas Financeiras</span></h2>
+            <Link to="/finances" className="text-xs text-primary flex items-center gap-1">Ver detalhes <TrendingUp className="w-3 h-3" /></Link>
+          </div>
+          <div className="space-y-4">
+            <Suspense fallback={<ChartSkeleton />}>
+              <CashFlowChart data={cashFlowData} />
+            </Suspense>
+            <div className="bg-card border rounded-2xl p-5">
+              <Suspense fallback={<CategoryChartSkeleton />}>
+                <CategoryChart data={dashboardData.categoryDistribution} privacyMode={false} />
+              </Suspense>
+            </div>
+          </div>
         </motion.section>
 
         <motion.section variants={itemVariants}>

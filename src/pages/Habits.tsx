@@ -15,7 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { HabitForm } from "@/components/forms/HabitForm";
 import { useHabits, Habit } from "@/hooks/useHabits";
-import { getHabitCategories } from "@/lib/habit-storage";
+import { getHabitCategories } from "@/storage/habit-storage";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useGamification } from "@/hooks/useGamification";
 

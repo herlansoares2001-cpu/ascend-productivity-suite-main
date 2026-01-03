@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
-import { Badge, BADGES, UserBadge } from "@/lib/badges";
+import { Badge, BADGES, UserBadge } from "@/core/habits/badges";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BadgeGalleryProps {
