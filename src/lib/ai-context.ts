@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { startOfDay, endOfDay, startOfMonth, endOfMonth, subMonths, format, isSameDay, parseISO } from "date-fns";
+import { startOfMonth, format, isSameDay, parseISO } from "date-fns";
 
 export interface UserContextData {
     finance: {
@@ -12,8 +12,8 @@ export interface UserContextData {
     habits: {
         total: number;
         completedToday: number;
-        score: string; // "2/5"
-        neglected: string[]; // Names of habits not done for > 3 days
+        score: string;
+        neglected: string[];
     };
     tasks: {
         pendingCount: number;
@@ -28,15 +28,10 @@ export interface UserContextData {
 
 export async function getGlobalUserContext(userId: string, currentBalance?: number): Promise<UserContextData> {
     const now = new Date();
-    const todayStr = format(now, 'yyyy-MM-dd');
-    const startMonthStr = format(startOfMonth(now), 'yyyy-MM-dd');
 
-    // --- 1. Finance Data ---
-    // --- 1. Finance Data (OTIMIZADO) ---
-    // Removemos a busca de transações cruas e usamos a RPC
+    // --- 1. Finance Data (OTIMIZADO via RPC) ---
     // @ts-ignore
-    // @ts-ignore
-    const { data: financeData, error } = await supabase
+    const { data: financeData } = await supabase
         .rpc('get_finance_summary', { p_user_id: userId });
 
     let spentToday = 0;
@@ -52,10 +47,7 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
         incomeMonth = Number(row.income_month);
     }
 
-    // Balance continua vindo do argumento ou calculado separadamente se necessário
     const balance = currentBalance !== undefined ? currentBalance : 0;
-
-
 
     // --- 2. Habits Data ---
     const { data: habits } = await supabase
@@ -66,31 +58,29 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
     let completedToday = 0;
     const neglected: string[] = [];
 
-    habits?.forEach(idx => {
-        const completions = idx.habit_completions || [];
-        // Check today
+    habits?.forEach(habit => {
+        const completions = habit.habit_completions || [];
         const doneToday = completions.some(c => isSameDay(parseISO(c.completed_at), now));
         if (doneToday) completedToday++;
 
-        // Check neglect (simple logic: no completion in last 3 days)
-        // Sort completions desc
         const sorted = completions.sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime());
         const lastCompletion = sorted[0];
+
         if (lastCompletion) {
             const daysDiff = (now.getTime() - new Date(lastCompletion.completed_at).getTime()) / (1000 * 3600 * 24);
-            if (daysDiff > 3) neglected.push(idx.name);
+            if (daysDiff > 3) neglected.push(habit.name);
         } else {
-            // Never done?
-            neglected.push(idx.name);
+            neglected.push(habit.name);
         }
     });
 
     // --- 3. Tasks ---
     const { data: tasks } = await supabase
         .from('tasks')
-        .select('*')
+        .select('title')
         .eq('user_id', userId)
-        .eq('completed', false);
+        .eq('completed', false)
+        .limit(5);
 
     const pendingTasks = tasks || [];
     const topTasks = pendingTasks.slice(0, 3).map(t => t.title);
@@ -107,7 +97,7 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
             total: totalHabits,
             completedToday,
             score: `${completedToday}/${totalHabits}`,
-            neglected: neglected.slice(0, 5) // Limit
+            neglected: neglected.slice(0, 5)
         },
         tasks: {
             pendingCount: pendingTasks.length,
@@ -116,6 +106,6 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
         calendar: {
             todayEvents: 0
         },
-        timestamp: now.toLocaleString('pt-BR')
+        timestamp: now.toLocaleString('pt-PT')
     };
 }
