@@ -32,25 +32,30 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
     const startMonthStr = format(startOfMonth(now), 'yyyy-MM-dd');
 
     // --- 1. Finance Data ---
-    // --- 1. Finance Data (Optimized via RPC) ---
+    // --- 1. Finance Data (OTIMIZADO) ---
+    // Removemos a busca de transações cruas e usamos a RPC
     // @ts-ignore
-    const { data: financeData } = await supabase.rpc('get_finance_summary', { p_user_id: userId }) as any;
+    // @ts-ignore
+    const { data: financeData, error } = await supabase
+        .rpc('get_finance_summary', { p_user_id: userId });
 
-    // Default values if RPC data is empty
-    const summary = (financeData && Array.isArray(financeData) && financeData.length > 0) ? financeData[0] : {
-        spent_today: 0,
-        spent_month: 0,
-        spent_last_month: 0,
-        income_month: 0
-    };
+    let spentToday = 0;
+    let spentMonth = 0;
+    let spentLastMonth = 0;
+    let incomeMonth = 0;
 
-    const spentToday = Number(summary.spent_today) || 0;
-    const spentMonth = Number(summary.spent_month) || 0;
-    const spentLastMonth = Number(summary.spent_last_month) || 0;
-    const incomeMonth = Number(summary.income_month) || 0;
+    if (financeData && (financeData as any).length > 0) {
+        const row = (financeData as any)[0];
+        spentToday = Number(row.spent_today);
+        spentMonth = Number(row.spent_month);
+        spentLastMonth = Number(row.spent_last_month);
+        incomeMonth = Number(row.income_month);
+    }
 
-    // Prefer passed balance, otherwise 0
+    // Balance continua vindo do argumento ou calculado separadamente se necessário
     const balance = currentBalance !== undefined ? currentBalance : 0;
+
+
 
     // --- 2. Habits Data ---
     const { data: habits } = await supabase
