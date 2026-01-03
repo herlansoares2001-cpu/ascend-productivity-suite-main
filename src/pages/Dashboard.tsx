@@ -48,7 +48,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { habits } = useHabits();
   const { getEvents } = useCalendar();
-  const { transactions, totalBalance, createTransaction, accounts, refreshData, isLoading } = useFinancialData();
+  const { transactions, totalBalance, createTransaction, accounts, refreshData, isLoading, summaryData } = useFinancialData();
   const { awardXP } = useGamification();
   const [isTxSheetOpen, setIsTxSheetOpen] = useState(false);
 
@@ -64,6 +64,8 @@ const Dashboard = () => {
     time: evt.startTime,
     location: evt.type === 'habit' ? 'Hábito' : 'Evento'
   }));
+
+  const monthlyBalance = (summaryData?.income_month || 0) - (summaryData?.spent_month || 0);
 
   const handleCreateTransaction = async (data: any) => {
     try {
@@ -126,9 +128,9 @@ const Dashboard = () => {
             <KPICard icon={CheckCircle} label="Hábitos" value={`${completedHabits}/${habits.length} concluídos`} color="lime" to="/habits" />
             <KPICard
               icon={Wallet}
-              label="Finanças"
-              value={`R$ ${totalBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-              subValue="Saldo atual"
+              label="Saldo (Mês)"
+              value={`R$ ${monthlyBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+              subValue="Receita - Despesa"
               color="green"
               to="/finances"
             />
