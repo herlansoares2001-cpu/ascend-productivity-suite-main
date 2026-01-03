@@ -30,10 +30,10 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
     setIsLoading(true);
 
     try {
-      // 1. Busca o contexto atualizado (Finanças, Hábitos, etc.)
+      // 1. Busca o contexto financeiro/hábitos
       const contextData = await getGlobalUserContext(user.id);
 
-      // 2. Chama a Edge Function enviando a mensagem + o contexto
+      // 2. Chama a Edge Function no Supabase (Backend Seguro)
       const { data, error } = await supabase.functions.invoke('ai-copilot', {
         body: {
           messages: [...messages, userMsg],
@@ -44,11 +44,15 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
 
       if (error) throw error;
 
+      if (!data?.reply) {
+        throw new Error("A resposta da IA veio vazia.");
+      }
+
       const aiMsg = { role: 'assistant' as const, content: data.reply };
       setMessages(prev => [...prev, aiMsg]);
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao conectar com o Copilot.");
+      toast.error("Erro ao conectar com o Sócio IA. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +80,7 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground mt-10">
                 <p>Olá! Sou o teu Sócio Estratégico.</p>
-                <p className="text-sm mt-2">Analiso as tuas finanças e hábitos em tempo real.</p>
+                <p className="text-sm mt-2">Analiso os teus dados em tempo real.</p>
               </div>
             )}
             {messages.map((msg, i) => (
@@ -104,7 +108,7 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ex: Como foi o meu mês?"
+              placeholder="Ex: Como estão as minhas finanças?"
               disabled={isLoading}
             />
             <Button type="submit" size="icon" disabled={isLoading}>

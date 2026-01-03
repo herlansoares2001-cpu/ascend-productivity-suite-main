@@ -30,21 +30,26 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
     const now = new Date();
 
     // --- 1. Finance Data (OTIMIZADO via RPC) ---
-    // @ts-ignore
-    const { data: financeData } = await supabase
-        .rpc('get_finance_summary', { p_user_id: userId });
-
     let spentToday = 0;
     let spentMonth = 0;
     let spentLastMonth = 0;
     let incomeMonth = 0;
 
-    if (financeData && (financeData as any).length > 0) {
-        const row = (financeData as any)[0];
-        spentToday = Number(row.spent_today);
-        spentMonth = Number(row.spent_month);
-        spentLastMonth = Number(row.spent_last_month);
-        incomeMonth = Number(row.income_month);
+    try {
+        // @ts-ignore
+        const { data: financeData, error: financeError } = await supabase
+            .rpc('get_finance_summary', { p_user_id: userId });
+
+        if (!financeError && financeData && (financeData as any).length > 0) {
+            const row = (financeData as any)[0];
+            spentToday = Number(row.spent_today);
+            spentMonth = Number(row.spent_month);
+            spentLastMonth = Number(row.spent_last_month);
+            incomeMonth = Number(row.income_month);
+        }
+    } catch (error) {
+        console.warn("Erro ao buscar resumo financeiro (RPC):", error);
+        // Fallback or just keep zeros
     }
 
     const balance = currentBalance !== undefined ? currentBalance : 0;
