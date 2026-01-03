@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -48,16 +47,23 @@ function AppContent() {
           <Route path="/finances" element={<ProtectedRoute><Finances /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
           <Route path="/more" element={<ProtectedRoute><More /></ProtectedRoute>} />
+          {/* Disabled for Core MVP Focus
           <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
           <Route path="/workout" element={<ProtectedRoute><Workout /></ProtectedRoute>} />
           <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
           <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
           <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+          */}
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
-      {user && !isLoading && <BottomNav />}
+      {user && !isLoading && (
+        <>
+          <BottomNav />
+          <AICopilot />
+        </>
+      )}
 
     </div>
   );
@@ -67,7 +73,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
         <Sonner />
         <BrowserRouter>
           <AppContent />

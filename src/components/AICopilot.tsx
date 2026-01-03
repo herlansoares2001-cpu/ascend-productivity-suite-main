@@ -63,7 +63,14 @@ export function AICopilot({ customTrigger }: AICopilotProps) {
       // 1. Fetch Context (RAG)
       let contextData = null;
       try {
-        contextData = await getGlobalUserContext(user.id, totalBalance);
+        const rawContext = await getGlobalUserContext(user.id);
+        contextData = {
+          ...rawContext,
+          finance: {
+            ...rawContext.finance,
+            balance: totalBalance
+          }
+        };
         console.log("AI Context loaded:", contextData);
       } catch (err) {
         console.warn("Failed to load AI context:", err);

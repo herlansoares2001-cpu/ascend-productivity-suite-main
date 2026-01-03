@@ -32,39 +32,25 @@ export async function getGlobalUserContext(userId: string, currentBalance?: numb
     const startMonthStr = format(startOfMonth(now), 'yyyy-MM-dd');
 
     // --- 1. Finance Data ---
-    const { data: transactions } = await supabase
-        .from('transactions')
-        .select('amount, type, transaction_date, category, is_paid')
-        .eq('user_id', userId)
-        .gte('transaction_date', format(subMonths(now, 1), 'yyyy-MM-01')); // Fetch last 2 months roughly
+    // --- 1. Finance Data (Optimized via RPC) ---
+    // @ts-ignore
+    const { data: financeData } = await supabase.rpc('get_finance_summary', { p_user_id: userId }) as any;
 
-    let spentToday = 0;
-    let spentMonth = 0;
-    let spentLastMonth = 0;
-    let incomeMonth = 0;
-    // Prefer passed balance, otherwise 0 (or could try to fetch accounts sum if needed, but client passing is standard)
+    // Default values if RPC data is empty
+    const summary = (financeData && Array.isArray(financeData) && financeData.length > 0) ? financeData[0] : {
+        spent_today: 0,
+        spent_month: 0,
+        spent_last_month: 0,
+        income_month: 0
+    };
+
+    const spentToday = Number(summary.spent_today) || 0;
+    const spentMonth = Number(summary.spent_month) || 0;
+    const spentLastMonth = Number(summary.spent_last_month) || 0;
+    const incomeMonth = Number(summary.income_month) || 0;
+
+    // Prefer passed balance, otherwise 0
     const balance = currentBalance !== undefined ? currentBalance : 0;
-
-    // ... rest of logic for spentToday etc ...
-
-    const currentMonth = now.getMonth();
-    const lastMonth = subMonths(now, 1).getMonth();
-
-    transactions?.forEach(t => {
-        const tDate = parseISO(t.transaction_date);
-        const amount = Number(t.amount);
-
-        // Expense logic
-        if (t.type === 'expense') {
-            if (isSameDay(tDate, now)) spentToday += amount;
-            if (tDate.getMonth() === currentMonth) spentMonth += amount;
-            if (tDate.getMonth() === lastMonth) spentLastMonth += amount;
-        }
-        // Income logic
-        else if (t.type === 'income') {
-            if (tDate.getMonth() === currentMonth) incomeMonth += amount;
-        }
-    });
 
     // --- 2. Habits Data ---
     const { data: habits } = await supabase

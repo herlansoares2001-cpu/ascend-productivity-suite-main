@@ -86,7 +86,7 @@ export function useGamification() {
             level: newLevel,
             last_active_date: new Date().toISOString()
         }).eq('id', user.id);
-        // Cast as any because types.ts might not be fully updated yet
+
 
         if (!error) {
             toast.success(`+${amount} XP`, {

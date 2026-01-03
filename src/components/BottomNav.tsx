@@ -18,7 +18,7 @@ const navItems = [
   { path: "/finances", icon: Wallet, label: "Finanças" },
   { path: "AI_TRIGGER", icon: Sparkles, label: "IA" },
   { path: "/habits", icon: CheckCircle2, label: "Hábitos" },
-  { path: "/more", icon: Calendar, label: "Agenda" },
+  { path: "/calendar", icon: Calendar, label: "Agenda" },
 ];
 
 export function BottomNav() {
