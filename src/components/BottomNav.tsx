@@ -9,12 +9,31 @@ import {
 } from "lucide-react";
 import { AICopilot } from "@/components/AICopilot";
 
+const Calendar2026Icon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+    <line x1="16" x2="16" y1="2" y2="6" />
+    <line x1="8" x2="8" y1="2" y2="6" />
+    <line x1="3" x2="21" y1="10" y2="10" />
+    <text x="12" y="19" textAnchor="middle" fontSize="8" fontWeight="bold" fill="currentColor" stroke="none">26</text>
+  </svg>
+);
+
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Home" },
   { path: "/finances", icon: Wallet, label: "Finanças" },
   { path: "AI_TRIGGER", icon: Sparkles, label: "IA" },
   { path: "/habits", icon: CheckCircle2, label: "Hábitos" },
-  { path: "/calendar", icon: Calendar, label: "Agenda" },
+  { path: "/calendar", icon: Calendar2026Icon, label: "2026" },
 ];
 
 export function BottomNav() {
