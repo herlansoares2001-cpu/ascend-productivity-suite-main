@@ -397,7 +397,7 @@ const Finances = () => {
                           {privacyMode ? "R$ •••••" : `${t.type === 'income' ? '+' : '-'} R$ ${Number(t.amount).toFixed(2)}`}
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => { setEditingTransaction({ ...t, date: parseISO(t.transaction_date) }); setIsSheetOpen(true); }}><Pencil className="w-4 h-4 mr-2" />Editar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => deleteTransaction.mutate(t.id)} className="text-destructive"><Trash2 className="w-4 h-4 mr-2" />Excluir</DropdownMenuItem>

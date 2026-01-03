@@ -39,7 +39,7 @@ export function KPICard({ icon: Icon, label, value, subValue, color = "default",
         <Icon className={`w-4 h-4 ${iconColorClasses[color]}`} />
       </div>
       <p className="text-xs text-muted-foreground font-light mb-1">{label}</p>
-      <p className="text-lg font-regular leading-tight">{value}</p>
+      <div className="text-lg font-regular leading-tight">{value}</div>
       {subValue && (
         <p className="text-xs text-muted-foreground font-thin mt-1">{subValue}</p>
       )}

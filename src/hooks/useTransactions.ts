@@ -47,21 +47,47 @@ export function useTransactions() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // Limpeza rigorosa do payload
+      const payload: any = {
+        description: data.description,
+        amount: Number(data.amount), // Garantir número
+        type: data.type,
+        category: data.category,
+        transaction_date: data.transaction_date,
+        user_id: user.id,
+        is_paid: Boolean(data.is_paid), // Garantir booleano
+        is_recurring: Boolean(data.is_recurring),
+        status: data.status || (Boolean(data.is_paid) ? 'paid' : 'pending'),
+      };
+
+      // Adicionar campos opcionais APENAS se tiverem valor real (não-nulo, não-undefined e não-string vazia)
+      if (data.account_id && data.account_id.trim() !== "") payload.account_id = data.account_id;
+      if (data.card_id && data.card_id.trim() !== "") payload.card_id = data.card_id;
+
+      // Parcelamento e outros campos numéricos
+      if (typeof data.total_installments === 'number') payload.total_installments = data.total_installments;
+      if (typeof data.installment_number === 'number') payload.installment_number = data.installment_number;
+      if (data.installment_group_id) payload.installment_group_id = data.installment_group_id;
+
+      // Log payload antes de enviar para debug fácil
+      console.log("Supabase Insert Payload:", payload);
+
       const { data: createdData, error } = await supabase
         .from("transactions")
-        .insert({
-          ...data,
-          user_id: user.id,
-          // Ensure booleans have defaults if undefined
-          is_paid: data.is_paid ?? false,
-          is_recurring: data.is_recurring ?? false
-        })
+        .insert(payload)
         .select()
         .single();
 
       if (error) {
-        console.error("Error creating transaction:", error);
-        throw error;
+        console.error("Supabase Error Full Object:", error);
+        // Melhorar mensagem de erro baseada no código do Postgres
+        let msg = error.message;
+        if (error.code === '23503') {
+          if (error.message.includes('account_id')) msg = "Erro: A conta selecionada não existe ou foi excluída.";
+          else msg = "Erro de integridade: Conta ou Cartão não encontrado.";
+        }
+        if (error.code === '42501') msg = "Permissão negada (RLS). Tente fazer logout e login novamente.";
+        throw new Error(msg);
       }
       return createdData;
     },

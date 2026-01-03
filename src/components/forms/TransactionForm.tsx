@@ -113,9 +113,17 @@ export function TransactionForm({ onSubmit, onCancel, initialData, isLoading, ac
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim() || !amount || !accountId) return;
 
-    onSubmit({
+    // 1. Validação Rígida
+    if (!accountId || accountId.trim() === "") {
+      console.error("Tentativa de envio sem conta selecionada");
+      alert("Por favor, selecione uma conta."); // Fallback simples
+      return;
+    }
+
+    if (!description.trim() || !amount) return;
+
+    const payload = {
       description: description.trim(),
       amount: parseFloat(amount),
       type,
@@ -128,7 +136,11 @@ export function TransactionForm({ onSubmit, onCancel, initialData, isLoading, ac
       recurrence_count: isRecurring ? recurrenceCount : undefined,
       is_installment: isInstallment,
       total_installments: isInstallment ? totalInstallments : undefined
-    });
+    };
+
+    console.log("Form Payload (Preview):", payload);
+
+    onSubmit(payload);
   };
 
   const getActiveAccounts = () => accounts.filter(acc => !acc.is_archived);
