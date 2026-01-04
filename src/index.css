@@ -29,30 +29,26 @@
 
 @layer base {
   :root {
-    /* Dark theme by default - inspired by Agrilo */
     --background: 0 0% 7%;
     --foreground: 0 0% 100%;
 
     --card: 0 0% 11%;
     --card-foreground: 0 0% 100%;
-    --card-elevated: 0 0% 14%;
 
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 100%;
 
-    /* Lime accent - #EBFF57 */
-    --primary: 68 100% 67%;
+    --primary: 68 100% 67%; /* #EBFF57 Lime */
     --primary-foreground: 0 0% 7%;
 
-    /* Green secondary - #A2F7A1 */
-    --secondary: 119 86% 80%;
+    --secondary: 119 86% 80%; /* #A2F7A1 Green */
     --secondary-foreground: 0 0% 7%;
 
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 119 86% 80%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -64,36 +60,16 @@
     --radius: 1rem;
 
     /* Custom tokens */
-    --glass: 0 0% 100% / 0.05;
-    --glass-border: 0 0% 100% / 0.1;
-    --glass-blur: 20px;
-    
     --gradient-lime: linear-gradient(135deg, hsl(68 100% 67%) 0%, hsl(80 100% 60%) 100%);
-    --gradient-green: linear-gradient(135deg, hsl(119 86% 80%) 0%, hsl(140 80% 70%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 14%) 0%, hsl(0 0% 10%) 100%);
-    
-    --shadow-soft: 0 4px 24px -4px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 40px hsl(68 100% 67% / 0.15);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.6);
-
-    --sidebar-background: 0 0% 9%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 68 100% 67%;
-    --sidebar-primary-foreground: 0 0% 7%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 68 100% 67%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   html {
-    font-family: 'Lufga', system-ui, sans-serif;
+    font-family: 'Lufga', sans-serif;
   }
 
   body {
@@ -105,153 +81,29 @@
     font-weight: 400;
     letter-spacing: -0.02em;
   }
-
-  .font-thin {
-    font-weight: 100;
-  }
-
-  .font-light {
-    font-weight: 300;
-  }
-
-  .font-regular {
-    font-weight: 400;
-  }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
-  }
-
-  .glass-card {
-    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 shadow-lg;
-  }
-
-  .card-gradient {
-    background: var(--gradient-card);
-  }
-
-  .gradient-lime {
-    background: var(--gradient-lime);
-  }
-
-  .gradient-green {
-    background: var(--gradient-green);
-  }
-
-  .text-gradient-lime {
-    background: var(--gradient-lime);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .glow-lime {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
-
-  .shadow-card {
+  /* Utility Classes for Bento Grid */
+  .bento-card {
+    @apply bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 relative overflow-hidden transition-all duration-300;
     box-shadow: var(--shadow-card);
   }
-
-  /* Bottom Navigation Styles */
-  .bottom-nav {
-    @apply fixed bottom-6 left-1/2 -translate-x-1/2 glass rounded-full px-2 py-2 shadow-lg;
-    box-shadow: 0 8px 32px -4px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.1);
-  }
-
-  .nav-item {
-    @apply relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300;
-  }
-
-  .nav-item.active {
-    @apply bg-primary text-primary-foreground;
-    box-shadow: 0 4px 16px hsl(68 100% 67% / 0.4);
-  }
-
-  .nav-item:not(.active):hover {
-    @apply bg-white/10;
-  }
-
-  /* Widget Cards */
-  .widget-card {
-    @apply rounded-2xl p-5 transition-all duration-300;
-    background: linear-gradient(145deg, hsl(0 0% 14%) 0%, hsl(0 0% 10%) 100%);
-    box-shadow: var(--shadow-card);
-  }
-
-  .widget-card:hover {
+  
+  .bento-card:hover {
+    @apply border-white/10;
     transform: translateY(-2px);
-    box-shadow: 0 12px 40px -8px hsl(0 0% 0% / 0.7);
   }
 
-  .widget-card-lime {
-    background: var(--gradient-lime);
-    @apply text-primary-foreground;
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
   }
 
-  .widget-card-green {
-    background: var(--gradient-green);
-    @apply text-secondary-foreground;
-  }
-
-  /* Progress Bars */
-  .progress-bar {
-    @apply h-2 rounded-full bg-muted overflow-hidden;
-  }
-
-  .progress-fill {
-    @apply h-full rounded-full transition-all duration-500 ease-out;
-    background: var(--gradient-lime);
-  }
-
-  /* Streak Badge */
-  .streak-badge {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-light;
-    background: hsl(68 100% 67% / 0.15);
-    color: hsl(68 100% 67%);
-  }
-
-  /* Empty State */
-  .empty-state {
-    @apply flex flex-col items-center justify-center py-12 text-center;
-  }
-
-  .empty-state-icon {
-    @apply w-16 h-16 mb-4 text-muted-foreground/50;
-  }
-
-  /* Page Container */
   .page-container {
-    @apply min-h-screen pb-28 px-5 pt-6;
+    @apply min-h-screen pb-28 px-5 pt-8 max-w-7xl mx-auto;
   }
-
-  /* Section Title */
-  .section-title {
-    @apply text-lg font-regular mb-4 flex items-center justify-between;
-  }
-
-  /* Chip/Tag */
-  .chip {
-    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-light transition-all duration-200;
-    @apply bg-card border border-border;
-  }
-
-  .chip.active {
-    @apply bg-primary text-primary-foreground border-primary;
-  }
-
-  .chip:not(.active):hover {
-    @apply bg-muted;
-  }
-}
-
-@layer utilities {
+  
+  /* Scrollbar Hide */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
