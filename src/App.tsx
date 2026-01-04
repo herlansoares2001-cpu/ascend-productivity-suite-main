@@ -20,6 +20,7 @@ import Goals from "./pages/Goals";
 import Workout from "./pages/Workout";
 import Diet from "./pages/Diet";
 import Books from "./pages/Books";
+import Achievements from "./pages/Achievements";
 // import Notes from "./pages/Notes"; // Disabled for MVP
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function AppContent() {
           {/* <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} /> */}
           <Route path="/more" element={<ProtectedRoute><More /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>

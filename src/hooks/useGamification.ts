@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/hooks/useAuth';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
+import { XP_TABLE, MAX_LEVEL } from '@/lib/gamification';
 
 export function useGamification() {
     const { user } = useAuth();
@@ -11,15 +12,17 @@ export function useGamification() {
     const [streak, setStreak] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    // Formula: XP to complete current level
-    const nextLevelXP = Math.round(level * 100 * 1.5);
+    // Get XP required for the NEXT level
+    // If level is 1, we need XP_TABLE[2] to reach level 2.
+    // If max level, we just show max value.
+    const nextLevelXP = XP_TABLE[level + 1] || XP_TABLE[MAX_LEVEL] || 100;
+
     const progress = Math.min((currentXP / nextLevelXP) * 100, 100);
 
     useEffect(() => {
         if (!user) return;
         fetchProfile();
 
-        // Subscribe to realtime changes? Optional, but good.
         const channel = supabase
             .channel('gamification_updates')
             .on(
@@ -67,13 +70,17 @@ export function useGamification() {
         let newLevel = level;
         let leveledUp = false;
 
-        const threshold = Math.round(newLevel * 100 * 1.5);
-
-        // Check level up (while loop for multiple level ups?)
-        if (newXP >= threshold) {
-            newLevel++;
-            newXP = newXP - threshold;
-            leveledUp = true;
+        // Loop to handle multi-level jumps
+        // While we have enough XP for next level and NOT at max level
+        while (newLevel < MAX_LEVEL) {
+            const threshold = XP_TABLE[newLevel + 1];
+            if (newXP >= threshold) {
+                newXP -= threshold;
+                newLevel++;
+                leveledUp = true;
+            } else {
+                break;
+            }
         }
 
         // Optimistic
