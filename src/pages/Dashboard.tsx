@@ -138,7 +138,7 @@ const Dashboard = () => {
             <KPICard icon={Dumbbell} label="Treino/Dieta" value="1.850 kcal" subValue="Consumidas hoje" color="orange" to="/workout" />
             <KPICard icon={BookOpen} label="Leituras" value="30 páginas" subValue="Meta de hoje" color="blue" to="/books" />
             <div className="col-span-2">
-              <KPICard icon={Target} label="Metas 2026" value="35% progresso total" subValue="3 de 8 metas em andamento" color="lime" to="/goals" />
+              <KPICard icon={Target} label="Metas 2026" value="35% progresso total" subValue="3 de 8 metas em andamento" color="lime" to="/calendar" />
             </div>
           </div>
         </motion.section>

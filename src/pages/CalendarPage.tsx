@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import Goals from "@/pages/Goals";
 
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ export default function CalendarPage() {
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filter, setFilter] = useState<'all' | 'habit' | 'event'>('all');
+  const [view, setView] = useState<'month' | 'week'>('month');
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,42 +122,126 @@ export default function CalendarPage() {
   return (
     <div className="page-container min-h-screen w-full flex flex-col relative bg-background pb-32 md:pb-12">
 
-      {/* TOP: Heatmap & Filters */}
-      <div className="flex-none flex flex-col z-10 bg-background/80 backdrop-blur-md pb-2 pt-2 sticky top-0 md:relative border-b border-[#D4F657]/20 shadow-sm">
-        <div className="px-2 sm:px-6">
-          {isLoading ? (
-            <div className="h-[300px] flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-[#D4F657]" />
-            </div>
-          ) : (
-            <ModernCalendar
-              events={events}
-              date={selectedDate}
-              onDateChange={setSelectedDate}
-              currentFilter={filter}
-              onFilterChange={setFilter}
-            />
-          )}
+      <Tabs defaultValue="agenda" className="w-full">
+
+        {/* HEADER COM ABAS E SWITCH */}
+        <div className="sticky top-0 z-20 w-full flex flex-col items-center bg-background/80 backdrop-blur-md border-b border-white/5 pt-4 pb-2 gap-4">
+          {/* Main Tabs (Agenda vs Metas) */}
+          <TabsList className="bg-secondary/20 p-1 rounded-full border border-white/5">
+            <TabsTrigger value="agenda" className="rounded-full px-6 data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Agenda 2026</TabsTrigger>
+            <TabsTrigger value="goals" className="rounded-full px-6 data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Metas</TabsTrigger>
+          </TabsList>
+
+          {/* View Switch Month/Week (Only visible on Agenda Tab) */}
+          {/* We can hide it via CSS when not in agenda, or standard React conditional. TabsContent lazy mounts so it's tricky to put this outside.
+                 But design wise, it looks better inside the Agenda content or global? 
+                 Let's put it inside the Agenda Content to hide it on Goals.
+             */}
         </div>
-      </div>
 
-      {/* DASHBOARD: Agenda View */}
-      <div className="flex-1 w-full mt-2">
-        <DayAgendaView date={selectedDate} events={selectedDayEvents} />
-      </div>
+        <TabsContent value="agenda" className="mt-0">
+          {/* SUBCONTROL: MENSAL / SEMANAL */}
+          <div className="w-full flex justify-center py-2 bg-background/50 backdrop-blur-sm">
+            <div className="flex p-0.5 rounded-full bg-secondary/20 border border-white/5 relative">
+              <button
+                onClick={() => setView('month')}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-medium transition-all relative z-10",
+                  view === 'month' ? "text-background shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Mensal
+                {view === 'month' && (
+                  <motion.div
+                    layoutId="view-switch-cal"
+                    className="absolute inset-0 bg-white rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setView('week')}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-xs font-medium transition-all relative z-10",
+                  view === 'week' ? "text-background shadow-sm font-bold" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Semanal
+                {view === 'week' && (
+                  <motion.div
+                    layoutId="view-switch-cal"
+                    className="absolute inset-0 bg-white rounded-full -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </button>
+            </div>
+          </div>
 
-      {/* FAB */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 h-16 w-16 text-black font-bold rounded-full shadow-[0_0_25px_rgba(212,246,87,0.5)] flex items-center justify-center z-[9999]"
-        style={{ backgroundColor: '#D4F657' }}
-        onClick={handleCreateNew}
-      >
-        <Plus className="w-8 h-8 stroke-[3px]" />
-      </motion.button>
+          {/* 2. ModernCalendar (apenas o grid/heatmap) */}
+          <div className="mt-2 px-2 sm:px-6">
+            {isLoading ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#D4F657]" />
+              </div>
+            ) : (
+              <ModernCalendar
+                events={events}
+                date={selectedDate}
+                onDateChange={setSelectedDate}
+                viewMode={view}
+              />
+            )}
+          </div>
 
-      {/* MODAL (Google Style - Fixed Duplicates) */}
+          {/* 3. Barra de Filtros (Pílula) */}
+          <div className="flex justify-center mt-6 mb-4 px-4 overflow-x-auto">
+            <div className="flex p-1.5 rounded-full bg-secondary/20 backdrop-blur-sm border border-white/5 gap-2">
+              {[
+                { id: 'all', label: 'Tudo' },
+                { id: 'habit', label: 'Hábitos' },
+                { id: 'event', label: 'Eventos' }
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFilter(f.id as any)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all border border-transparent",
+                    filter === f.id
+                      ? "border-[#D4F657] text-[#D4F657] bg-[#D4F657]/10 shadow-[0_0_10px_rgba(212,246,87,0.2)]"
+                      : "text-muted-foreground hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 5. DayAgendaView (Lista de horários do dia) */}
+          <div className="flex-1 w-full px-2 sm:px-6">
+            <DayAgendaView date={selectedDate} events={selectedDayEvents} />
+          </div>
+
+          {/* 6. Botão FAB (Only on Agenda?) */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="fixed bottom-24 right-4 md:bottom-8 md:right-8 h-16 w-16 text-black font-bold rounded-full shadow-[0_0_25px_rgba(212,246,87,0.5)] flex items-center justify-center z-[9999]"
+            style={{ backgroundColor: '#D4F657' }}
+            onClick={handleCreateNew}
+          >
+            <Plus className="w-8 h-8 stroke-[3px]" />
+          </motion.button>
+        </TabsContent>
+
+        {/* TAB: METAS */}
+        <TabsContent value="goals" className="px-4 sm:px-6">
+          <Goals />
+        </TabsContent>
+      </Tabs>
+
+      {/* 7. Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-[#D4F657]/20 p-0 gap-0 rounded-2xl">
           <DialogDescription className="sr-only">Formulário para criar novo evento</DialogDescription>

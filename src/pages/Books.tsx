@@ -1,65 +1,234 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { 
-  BookOpen, 
-  Plus, 
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  BookOpen,
+  Plus,
   ChevronRight,
   BookMarked,
-  Check
+  Check,
+  Upload,
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { PdfReader } from "@/components/books/PdfReader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { pdfjs } from 'react-pdf';
+
+// Ensure worker is set for the page context as well if used directly
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 interface Book {
   id: string;
   title: string;
   author: string;
-  status: "want" | "reading" | "read";
-  progress: number;
-  cover?: string;
+  file_path: string;
+  current_page: number;
+  total_pages: number;
+  cover_url?: string;
+  status?: 'reading' | 'read' | 'want'; // Computed on frontend based on progress
 }
 
-const initialBooks: Book[] = [
-  { id: "1", title: "Atomic Habits", author: "James Clear", status: "reading", progress: 85 },
-  { id: "2", title: "O Poder do Hábito", author: "Charles Duhigg", status: "read", progress: 100 },
-  { id: "3", title: "Deep Work", author: "Cal Newport", status: "reading", progress: 42 },
-  { id: "4", title: "Thinking, Fast and Slow", author: "Daniel Kahneman", status: "want", progress: 0 },
-  { id: "5", title: "Essencialismo", author: "Greg McKeown", status: "read", progress: 100 },
-];
-
-const statusLabels = {
-  want: "Quero Ler",
-  reading: "Lendo",
-  read: "Lido",
-};
-
 const Books = () => {
-  const [books, setBooks] = useState<Book[]>(initialBooks);
-  const [activeFilter, setActiveFilter] = useState<"all" | "want" | "reading" | "read">("all");
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [readingBook, setReadingBook] = useState<Book | null>(null);
 
-  const filteredBooks = activeFilter === "all" 
-    ? books 
-    : books.filter(b => b.status === activeFilter);
+  // Upload State
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadAuthor, setUploadAuthor] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
+  // --- QUERIES ---
+  const { data: books = [], isLoading } = useQuery({
+    queryKey: ['books', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('books')
+        .select('*')
+        .order('last_read_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map((b: any) => ({
+        ...b,
+        status: b.progress === 100 || (b.total_pages > 0 && b.current_page >= b.total_pages) ? 'read' : (b.current_page > 1 ? 'reading' : 'want'),
+        progress: b.total_pages > 0 ? Math.round((b.current_page / b.total_pages) * 100) : 0
+      })) as Book[];
+    }
+  });
+
+  // --- MUTATIONS ---
+  const uploadBookMutation = useMutation({
+    mutationFn: async () => {
+      if (!uploadFile || !user) throw new Error("No file or user");
+
+      // 1. Get Page Count
+      let totalPages = 0;
+      try {
+        const arrayBuffer = await uploadFile.arrayBuffer();
+        const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+        totalPages = pdf.numPages;
+      } catch (e) {
+        console.error("Error counting pages", e);
+        // Fallback or ignore
+      }
+
+      // 2. Upload File
+      const fileExt = uploadFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('books')
+        .upload(filePath, uploadFile);
+
+      if (uploadError) throw uploadError;
+
+      // 3. Insert Record
+      const { error: dbError } = await supabase
+        .from('books')
+        .insert({
+          user_id: user.id,
+          title: uploadTitle,
+          author: uploadAuthor,
+          file_path: filePath,
+          total_pages: totalPages,
+          current_page: 1
+        });
+
+      if (dbError) throw dbError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      setIsUploadOpen(false);
+      resetUploadForm();
+      toast.success("Livro adicionado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error("Erro ao fazer upload: " + error.message);
+    }
+  });
+
+  const updateProgressMutation = useMutation({
+    mutationFn: async ({ id, page }: { id: string, page: number }) => {
+      // Optimistic update handled via UI, this syncs with DB
+      const { error } = await supabase
+        .from('books')
+        .update({
+          current_page: page,
+          last_read_at: new Date().toISOString()
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+    }
+  });
+
+  const deleteBookMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('books').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+      toast.success("Livro removido.");
+    }
+  });
+
+  // --- HANDLERS ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadFile(file);
+      // Auto-fill title if empty
+      if (!uploadTitle) {
+        setUploadTitle(file.name.replace('.pdf', ''));
+      }
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile || !uploadTitle) return;
+    setIsUploading(true);
+    try {
+      await uploadBookMutation.mutateAsync();
+    } catch (e) {
+      // handled in mutation
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const resetUploadForm = () => {
+    setUploadFile(null);
+    setUploadTitle("");
+    setUploadAuthor("");
+  };
+
+  const openReader = (book: Book) => {
+    // Need public URL
+    const { data } = supabase.storage.from('books').getPublicUrl(book.file_path);
+    setReadingBook({ ...book, cover_url: data.publicUrl }); // abusing cover_url to pass full url slightly hacky but works
+  };
+
+  // Debounced Save
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handlePageChange = (page: number) => {
+    if (!readingBook) return;
+
+    // Update local state immediately for UI
+    setReadingBook(prev => prev ? { ...prev, current_page: page } : null);
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
+    saveTimeoutRef.current = setTimeout(() => {
+      updateProgressMutation.mutate({ id: readingBook.id, page });
+    }, 1000);
+  };
+
+  // Status Stats
   const readCount = books.filter(b => b.status === "read").length;
   const readingCount = books.filter(b => b.status === "reading").length;
 
   return (
-    <div className="page-container">
+    <div className="page-container pb-24">
       {/* Header */}
-      <motion.header 
-        className="mb-6"
+      <motion.header
+        className="mb-6 flex justify-between items-start"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-regular mb-1">Leituras</h1>
-        <p className="text-sm text-muted-foreground font-light">
-          Sua biblioteca pessoal
-        </p>
+        <div>
+          <h1 className="text-2xl font-regular mb-1">Minha Biblioteca</h1>
+          <p className="text-sm text-muted-foreground font-light">
+            Central de conhecimento e leituras.
+          </p>
+        </div>
+        <Button onClick={() => setIsUploadOpen(true)} size="icon" className="rounded-full h-10 w-10 bg-[#D4F657] text-black hover:bg-[#D4F657]/80">
+          <Plus className="w-5 h-5" />
+        </Button>
       </motion.header>
 
       {/* Stats */}
-      <motion.div 
-        className="grid grid-cols-2 gap-4 mb-6"
+      <motion.div
+        className="grid grid-cols-2 gap-4 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -67,10 +236,9 @@ const Books = () => {
         <div className="widget-card widget-card-lime">
           <div className="flex items-center gap-2 mb-2">
             <Check className="w-4 h-4" />
-            <span className="text-xs font-light opacity-80">Lidos</span>
+            <span className="text-xs font-light opacity-80">Concluídos</span>
           </div>
           <p className="text-3xl font-regular">{readCount}</p>
-          <p className="text-xs font-light opacity-70">livros completados</p>
         </div>
 
         <div className="widget-card">
@@ -79,116 +247,126 @@ const Books = () => {
             <span className="text-xs font-light text-muted-foreground">Lendo</span>
           </div>
           <p className="text-3xl font-regular">{readingCount}</p>
-          <p className="text-xs font-light text-muted-foreground">em andamento</p>
         </div>
       </motion.div>
 
-      {/* Filters */}
-      <motion.div 
-        className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <button 
-          className={`chip whitespace-nowrap ${activeFilter === "all" ? "active" : ""}`}
-          onClick={() => setActiveFilter("all")}
-        >
-          Todos
-        </button>
-        <button 
-          className={`chip whitespace-nowrap ${activeFilter === "reading" ? "active" : ""}`}
-          onClick={() => setActiveFilter("reading")}
-        >
-          Lendo
-        </button>
-        <button 
-          className={`chip whitespace-nowrap ${activeFilter === "want" ? "active" : ""}`}
-          onClick={() => setActiveFilter("want")}
-        >
-          Quero Ler
-        </button>
-        <button 
-          className={`chip whitespace-nowrap ${activeFilter === "read" ? "active" : ""}`}
-          onClick={() => setActiveFilter("read")}
-        >
-          Lidos
-        </button>
-      </motion.div>
-
-      {/* Books List */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-regular">{filteredBooks.length} livros</h2>
-        <motion.button 
-          className="w-9 h-9 rounded-full bg-primary flex items-center justify-center"
-          whileTap={{ scale: 0.9 }}
-        >
-          <Plus className="w-5 h-5 text-primary-foreground" />
-        </motion.button>
-      </div>
-
-      {filteredBooks.length === 0 ? (
-        <EmptyState 
+      {/* Books List Grid */}
+      {isLoading ? (
+        <div className="flex justify-center p-8"><Loader2 className="animate-spin text-primary" /></div>
+      ) : books.length === 0 ? (
+        <EmptyState
           icon={BookOpen}
-          title="Nenhum livro"
-          description="Adicione livros à sua biblioteca para acompanhar seu progresso."
+          title="Biblioteca Vazia"
+          description="Faça upload de livros PDF para começar a ler."
+          action={<Button onClick={() => setIsUploadOpen(true)}>Adicionar PDF</Button>}
         />
       ) : (
-        <motion.div 
-          className="space-y-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {filteredBooks.map((book, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {books.map((book) => (
             <motion.div
               key={book.id}
-              className="widget-card flex gap-4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              className="widget-card group relative p-0 overflow-hidden flex flex-col"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
             >
-              <div className="w-16 h-20 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-6 h-6 text-primary" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h3 className="font-regular truncate">{book.title}</h3>
-                <p className="text-sm text-muted-foreground font-light mb-2">{book.author}</p>
-                
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    book.status === "read" 
-                      ? "bg-secondary/20 text-secondary" 
-                      : book.status === "reading"
-                      ? "bg-primary/20 text-primary"
-                      : "bg-muted text-muted-foreground"
-                  }`}>
-                    {statusLabels[book.status]}
-                  </span>
-                  
-                  {book.status === "reading" && (
-                    <span className="text-xs text-muted-foreground">{book.progress}%</span>
-                  )}
+              {/* Top Section with Icon */}
+              <div className="h-28 bg-gradient-to-br from-zinc-800 to-zinc-900 border-b border-white/5 flex items-center justify-center relative">
+                <BookOpen className="w-10 h-10 text-white/20" />
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:bg-red-900/20" onClick={() => deleteBookMutation.mutate(book.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-
-                {book.status === "reading" && (
-                  <div className="progress-bar h-1.5 mt-2">
-                    <motion.div 
-                      className="progress-fill"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${book.progress}%` }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
-                    />
-                  </div>
-                )}
               </div>
 
-              <ChevronRight className="w-5 h-5 text-muted-foreground self-center" />
+              {/* Content */}
+              <div className="p-4 flex-1 flex flex-col">
+                <h3 className="font-medium text-lg capitalize leading-snug line-clamp-1 mb-1">{book.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{book.author || "Autor desconhecido"}</p>
+
+                <div className="mt-auto space-y-2">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Pág {book.current_page} de {book.total_pages}</span>
+                    <span>{Math.round((book.current_page / (book.total_pages || 1)) * 100)}%</span>
+                  </div>
+                  <Progress value={(book.current_page / (book.total_pages || 1)) * 100} className="h-1.5" indicatorClassName="bg-[#D4F657]" />
+
+                  <Button className="w-full mt-2 bg-[#D4F657] text-black hover:bg-[#D4F657]/80" onClick={() => openReader(book)}>
+                    {book.current_page > 1 ? "Continuar Leitura" : "Ler Agora"}
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       )}
+
+      {/* Reader Overlay */}
+      <AnimatePresence>
+        {readingBook && readingBook.cover_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100]"
+          >
+            <PdfReader
+              fileUrl={readingBook.cover_url!} // using cover_url prop as it holds the signed/public url
+              initialPage={readingBook.current_page}
+              onPageChange={handlePageChange}
+              onClose={() => {
+                setReadingBook(null);
+                queryClient.invalidateQueries({ queryKey: ['books'] });
+              }}
+              title={readingBook.title}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upload Modal */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Livro</DialogTitle>
+            <DialogDescription>Faça upload de um arquivo PDF (Máx. 50MB)</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="border-2 border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors relative">
+              <input
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+              {uploadFile ? (
+                <p className="text-sm font-medium text-[#D4F657]">{uploadFile.name}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Clique ou arraste o PDF aqui</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Título</Label>
+              <Input value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} placeholder="Nome do livro" />
+            </div>
+            <div className="space-y-2">
+              <Label>Autor</Label>
+              <Input value={uploadAuthor} onChange={e => setUploadAuthor(e.target.value)} placeholder="Nome do autor" />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsUploadOpen(false)}>Cancelar</Button>
+            <Button onClick={handleUpload} disabled={isUploading || !uploadFile} className="bg-[#D4F657] text-black">
+              {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {isUploading ? "Enviando..." : "Salvar Livro"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

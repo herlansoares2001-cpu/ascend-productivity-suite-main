@@ -16,6 +16,11 @@ import More from "./pages/More";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
+import Goals from "./pages/Goals";
+import Workout from "./pages/Workout";
+import Diet from "./pages/Diet";
+import Books from "./pages/Books";
+// import Notes from "./pages/Notes"; // Disabled for MVP
 
 const queryClient = new QueryClient();
 
@@ -40,14 +45,12 @@ function AppContent() {
           <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
           <Route path="/finances" element={<ProtectedRoute><Finances /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-          <Route path="/more" element={<ProtectedRoute><More /></ProtectedRoute>} />
-          {/* Disabled for Core MVP Focus
-          <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
           <Route path="/workout" element={<ProtectedRoute><Workout /></ProtectedRoute>} />
           <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
-          <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
-          <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
-          */}
+          <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+          {/* <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} /> */}
+          <Route path="/more" element={<ProtectedRoute><More /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
