@@ -110,14 +110,14 @@ const Habits = () => {
   return (
     <div className="page-container pb-28">
       <motion.header className="mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-regular mb-1">Hábitos & Vícios</h1>
+        <h1 className="text-2xl font-regular mb-1">Hábitos & Controle</h1>
         <p className="text-sm text-muted-foreground font-light">Construa sua melhor versão.</p>
       </motion.header>
 
       <Tabs defaultValue="routine" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-secondary/20 p-1 rounded-full mb-6">
           <TabsTrigger value="routine" className="rounded-full data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Rotina</TabsTrigger>
-          <TabsTrigger value="vices" className="rounded-full data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Vícios</TabsTrigger>
+          <TabsTrigger value="vices" className="rounded-full data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Controle</TabsTrigger>
         </TabsList>
 
         {/* TAB: ROTINA */}
@@ -281,7 +281,7 @@ const Habits = () => {
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="quit_bad_habit">Abandonar Vício (Contador Abstinência)</SelectItem>
+                  <SelectItem value="quit_bad_habit">Superar Desafio (Contador Abstinência)</SelectItem>
                   <SelectItem value="maintain_good_habit">Manter Hábito (Streak Positivo)</SelectItem>
                 </SelectContent>
               </Select>
