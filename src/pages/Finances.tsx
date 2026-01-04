@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, TrendingUp, TrendingDown, Plus, Coffee, ShoppingCart, Car, Utensils, Home, Gamepad2, MoreVertical, Pencil, Trash2, Briefcase,
-  CreditCard as CreditCardIcon, Landmark, ArrowRightLeft, CheckCircle2, Repeat, Layers
+  CreditCard as CreditCardIcon, Landmark, ArrowRightLeft, CheckCircle2, Repeat, Layers, User
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -317,8 +317,13 @@ const Finances = () => {
   return (
     <div className="page-container pb-24">
       {/* Header */}
-      <motion.header className="mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.header className="mb-6 flex items-center justify-between" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-regular mb-1">Finanças</h1>
+
+        {/* Profile Icon (Consistent with Dashboard) */}
+        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 transition-colors">
+          <User className="w-6 h-6 text-[#E9FF57]" />
+        </Button>
       </motion.header>
 
       {/* Tabs */}
@@ -449,7 +454,7 @@ const Finances = () => {
       </AnimatePresence>
 
       {(activeTab !== 'cards' || selectedCardId) && (
-        <motion.div className="fixed bottom-24 left-5 z-40" initial={{ scale: 0 }} animate={{ scale: 1 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+        <motion.div className="fixed bottom-24 right-5 z-40" initial={{ scale: 0 }} animate={{ scale: 1 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
           <button className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg glow-lime" onClick={() => { setEditingTransaction(null); setIsSheetOpen(true); }}>
             <Plus className="w-6 h-6" />
           </button>

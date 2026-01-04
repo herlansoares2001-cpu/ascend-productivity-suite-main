@@ -43,11 +43,8 @@ export function DashboardHeader({ totals, privacyMode, onTogglePrivacy, currentD
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <div className="hidden lg:block mr-2">
-                        <UserLevelWidget />
-                    </div>
                     {onNewTransaction && (
-                        <Button size="sm" onClick={onNewTransaction} className="hidden md:flex">
+                        <Button size="sm" onClick={onNewTransaction} className="hidden md:flex bg-[#E9FF57] text-black hover:bg-[#d4e64f]">
                             <Plus className="w-4 h-4 mr-2" />
                             Nova Transação
                         </Button>
