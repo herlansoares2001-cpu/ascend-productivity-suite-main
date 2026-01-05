@@ -323,7 +323,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reset_user_data: {
+        Args: Record<PropertyKey, never>
+        Returns: void
+      }
+      delete_user: {
+        Args: Record<PropertyKey, never>
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never

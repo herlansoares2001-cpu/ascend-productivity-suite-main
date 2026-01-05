@@ -28,23 +28,18 @@ export function DangerZone() {
         if (!user) return;
         setIsDeletingData(true);
         try {
-            // Parallel deletion of all user data except auth
-            // Using Promise.allSettled to ensure we try to delete everything even if one fails (though typically we want all or nothing, RLS might block some)
-            const tables = ['transactions', 'habits', 'habit_logs', 'events', 'books', 'goals', 'notes', 'reminders'];
+            // Call server-side RPC to delete all data transactionally
+            const { error } = await supabase.rpc('reset_user_data');
 
-            const promises = tables.map(table =>
-                supabase.from(table).delete().eq('user_id', user.id)
-            );
-
-            await Promise.all(promises);
+            if (error) throw error;
 
             toast.success("Dados resetados com sucesso. Bem-vindo ao recomeço!");
 
-            // Optional: refresh page to clear state
+            // Refresh page to clear all local state and caches
             setTimeout(() => window.location.reload(), 1500);
 
         } catch (error) {
-            console.error(error);
+            console.error('Error resetting data:', error);
             toast.error("Erro ao resetar dados. Tente novamente.");
         } finally {
             setIsDeletingData(false);

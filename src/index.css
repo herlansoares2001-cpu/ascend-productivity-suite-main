@@ -29,26 +29,22 @@
 
 @layer base {
   :root {
+    /* Forcing Dark Mode as Default */
     --background: 0 0% 5%;
-    /* #0D0D0D */
     --foreground: 0 0% 100%;
 
     --card: 0 0% 9%;
-    /* Slightly lighter gray for cards */
     --card-foreground: 0 0% 100%;
 
     --popover: 0 0% 9%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 68 100% 67%;
-    /* #E9FF57 */
+    /* Original Lime */
     --primary-foreground: 0 0% 5%;
-    /* #0D0D0D */
 
     --secondary: 61 41% 25%;
-    /* #585925 */
     --secondary-foreground: 68 100% 67%;
-    /* #E9FF57 */
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
@@ -56,7 +52,7 @@
     --accent: 0 0% 15%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 20%;
@@ -65,17 +61,47 @@
 
     --radius: 1rem;
 
-    /* Custom tokens */
     --gradient-lime: linear-gradient(135deg, #E9FF57 0%, #585925 100%);
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
   }
 
-  /* Glassmorphism Utility */
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 68 100% 67%;
+    /* Original Lime */
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 61 41% 25%;
+    --secondary-foreground: 68 100% 67%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 68 100% 67%;
+
+    --gradient-lime: linear-gradient(135deg, #E9FF57 0%, #585925 100%);
+    --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Glassmorphism Utility - Adaptive */
   .glass {
-    background: rgba(13, 13, 13, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    @apply bg-background/70 backdrop-blur-md border border-foreground/5;
   }
 
   * {
@@ -106,12 +132,11 @@
 
   /* Utility Classes for Bento Grid */
   .bento-card {
-    @apply bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 relative overflow-hidden transition-all duration-300;
-    box-shadow: var(--shadow-card);
+    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-3xl p-6 relative overflow-hidden transition-all duration-300 shadow-sm dark:shadow-none;
   }
 
   .bento-card:hover {
-    @apply border-white/10;
+    @apply border-primary/20;
     transform: translateY(-2px);
   }
 

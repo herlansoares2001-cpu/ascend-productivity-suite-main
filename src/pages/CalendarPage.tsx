@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { ModernCalendar } from "@/components/calendar/ModernCalendar";
 import { DayAgendaView } from "@/components/calendar/DayAgendaView";
@@ -24,6 +25,8 @@ export default function CalendarPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading } = useCalendarData();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") === "goals" ? "goals" : "agenda";
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [filter, setFilter] = useState<'all' | 'habit' | 'event'>('all');
@@ -122,7 +125,7 @@ export default function CalendarPage() {
   return (
     <div className="page-container min-h-screen w-full flex flex-col relative bg-background pb-32 md:pb-12">
 
-      <Tabs defaultValue="agenda" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
 
         {/* HEADER COM ABAS E SWITCH */}
         <div className="sticky top-0 z-20 w-full flex flex-col items-center bg-background/80 backdrop-blur-md border-b border-white/5 pt-4 pb-2 gap-4">

@@ -12,7 +12,6 @@ import Dashboard from "./pages/Dashboard";
 import Habits from "./pages/Habits";
 import Finances from "./pages/Finances";
 import CalendarPage from "./pages/CalendarPage";
-import More from "./pages/More";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -20,6 +19,7 @@ import Goals from "./pages/Goals";
 import Workout from "./pages/Workout";
 import Diet from "./pages/Diet";
 import Books from "./pages/Books";
+import ProfileEdit from "./pages/ProfileEdit";
 import Achievements from "./pages/Achievements";
 // import Notes from "./pages/Notes"; // Disabled for MVP
 
@@ -51,7 +51,7 @@ function AppContent() {
           <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
           <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
           {/* <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} /> */}
-          <Route path="/more" element={<ProtectedRoute><More /></ProtectedRoute>} />
+          <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />

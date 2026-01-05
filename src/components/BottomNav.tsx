@@ -39,6 +39,8 @@ const navItems = [
 export function BottomNav() {
   const location = useLocation();
 
+  if (location.pathname === '/profile') return null;
+
   return (
     <motion.nav
       className="fixed bottom-6 z-50 glass rounded-full px-2 py-2 w-[90%] max-w-[380px] md:max-w-[480px]"

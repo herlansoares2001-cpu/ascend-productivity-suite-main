@@ -53,7 +53,7 @@ export default function Achievements() {
                 </Button>
                 <div>
                     <h1 className="text-2xl font-semibold flex items-center gap-2">
-                        Galeria de Troféus <Trophy className="w-6 h-6 text-[#E9FF57]" />
+                        Galeria de Troféus <Trophy className="w-6 h-6 text-primary" />
                     </h1>
                     <p className="text-sm text-zinc-400">Suas conquistas e marcos no Ascend.</p>
                 </div>
@@ -69,19 +69,19 @@ export default function Achievements() {
                     <div>
                         <p className="text-sm font-medium text-zinc-400 mb-1">Nível Atual</p>
                         <h2 className="text-4xl font-bold text-white mb-2">{level}</h2>
-                        <div className="flex items-center gap-2 text-xs text-[#E9FF57]">
+                        <div className="flex items-center gap-2 text-xs text-primary">
                             <span>{Math.round(xpProgress)}% para o próximo nível</span>
                         </div>
                     </div>
-                    <div className="w-20 h-20 rounded-full border-4 border-[#E9FF57]/20 flex items-center justify-center bg-[#E9FF57]/5">
-                        <Trophy className="w-8 h-8 text-[#E9FF57]" />
+                    <div className="w-20 h-20 rounded-full border-4 border-primary/20 flex items-center justify-center bg-primary/5">
+                        <Trophy className="w-8 h-8 text-primary" />
                     </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mt-6 h-3 w-full bg-zinc-800 rounded-full overflow-hidden">
                     <motion.div
-                        className="h-full bg-[#E9FF57] shadow-[0_0_15px_rgba(235,255,87,0.5)]"
+                        className="h-full bg-primary shadow-[0_0_15px_rgba(235,255,87,0.5)]"
                         initial={{ width: 0 }}
                         animate={{ width: `${xpProgress}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
@@ -92,7 +92,7 @@ export default function Achievements() {
             {/* Grid */}
             <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Emblemas Conquistados</h3>
-                <span className="text-xs font-mono bg-[#E9FF57]/10 text-[#E9FF57] px-2 py-1 rounded-md">
+                <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-1 rounded-md">
                     {userBadges.length}/{allBadges.length}
                 </span>
             </div>
@@ -101,13 +101,17 @@ export default function Achievements() {
 
             {/* Celebration Modal */}
             <Dialog open={!!newUnlock} onOpenChange={(open) => !open && clearNewUnlock()}>
-                <DialogContent className="sm:max-w-md text-center bg-zinc-950 border-[#E9FF57]/20">
+                <DialogContent className="sm:max-w-md text-center bg-zinc-950 border-primary/20">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl text-center text-[#E9FF57]">Parabéns!</DialogTitle>
+                        <DialogTitle className="text-2xl text-center text-primary">Parabéns!</DialogTitle>
                     </DialogHeader>
                     <div className="py-6 flex flex-col items-center">
-                        <div className="text-6xl mb-4 animate-bounce">
-                            {allBadges.find(b => b.id === newUnlock)?.icon}
+                        <div className="mb-4 animate-bounce">
+                            {(() => {
+                                const badge = allBadges.find(b => b.id === newUnlock);
+                                const Icon = badge?.icon;
+                                return Icon ? <Icon className="w-20 h-20 text-primary" /> : null;
+                            })()}
                         </div>
                         <h3 className="text-xl font-bold mb-2 text-white">
                             Você desbloqueou "{allBadges.find(b => b.id === newUnlock)?.name}"
@@ -115,11 +119,11 @@ export default function Achievements() {
                         <p className="text-muted-foreground">
                             {allBadges.find(b => b.id === newUnlock)?.description}
                         </p>
-                        <div className="mt-4 inline-block bg-[#E9FF57]/20 text-[#E9FF57] px-3 py-1 rounded-full text-sm font-bold">
+                        <div className="mt-4 inline-block bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-bold">
                             +{allBadges.find(b => b.id === newUnlock)?.xpReward} XP
                         </div>
                     </div>
-                    <Button onClick={() => clearNewUnlock()} className="w-full bg-[#E9FF57] text-black hover:bg-[#d4e64f]">
+                    <Button onClick={() => clearNewUnlock()} className="w-full bg-primary text-primary-foreground hover:bg-[#d4e64f]">
                         Continuar
                     </Button>
                 </DialogContent>

@@ -29,13 +29,9 @@ export interface UserStats {
 }
 
 export function useBadges(stats: UserStats) {
-    const [userBadges, setUserBadges] = useState<{ badgeId: string; unlockedAt: string }[]>([]);
+    // Initialize lazily to avoid empty state on first render
+    const [userBadges, setUserBadges] = useState<{ badgeId: string; unlockedAt: string }[]>(getStoredBadges);
     const [newUnlock, setNewUnlock] = useState<string | null>(null);
-
-    // Initial Load
-    useEffect(() => {
-        setUserBadges(getStoredBadges());
-    }, []);
 
     // Check Logic
     useEffect(() => {
@@ -56,7 +52,10 @@ export function useBadges(stats: UserStats) {
             // Celebrate (Show first one found)
             setNewUnlock(newUnlocks[0].id);
         }
-    }, [stats, userBadges]); // Dependent on stats changing
+    }, [stats]); // Removed userBadges from dependency to avoid loop, though logic handles it. 
+    // Actually, if we update userBadges, we don't need to re-check immediately.
+    // Stats change is the trigger.
+
 
     const clearNewUnlock = () => setNewUnlock(null);
 

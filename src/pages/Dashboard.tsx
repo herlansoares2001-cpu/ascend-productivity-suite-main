@@ -53,7 +53,7 @@ const BentoCard = ({ children, className, onClick }: { children: React.ReactNode
   </motion.div>
 );
 
-const DailyBriefingHeader = ({ name }: { name: string }) => {
+const DailyBriefingHeader = ({ name, onProfileClick }: { name: string; onProfileClick: () => void }) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
@@ -75,7 +75,12 @@ const DailyBriefingHeader = ({ name }: { name: string }) => {
       </div>
 
       {/* Profile Icon */}
-      <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 transition-colors">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-full hover:bg-white/5 transition-colors"
+        onClick={onProfileClick}
+      >
         <User className="w-6 h-6 text-[#EBFF57]" />
       </Button>
     </div>
@@ -99,25 +104,40 @@ const Dashboard = () => {
 
   // State
   const [currentBook, setCurrentBook] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // 1. Fetch Data
   useEffect(() => {
     async function fetchLastBook() {
       if (!user) return;
-      const { data } = await supabase.from('books').select('*').order('last_read_at', { ascending: false }).limit(1).single();
+      const { data } = await supabase.from('books').select('*').order('last_read_at', { ascending: false }).limit(1).maybeSingle();
       if (data) setCurrentBook(data);
     }
     fetchLastBook();
   }, [user]);
 
   // 2. Logic
-  const todayEvents = getEvents(new Date());
-  const formattedAppointments = todayEvents.map(evt => ({
-    id: evt.id,
-    title: evt.title,
-    time: format(evt.startTime, 'HH:mm'),
-    location: evt.category || 'Pessoal'
-  }));
+  const todayEvents = getEvents(selectedDate);
+  const formattedAppointments = todayEvents.map(evt => {
+    let timeStr = '--:--';
+    try {
+      if (evt.startTime) {
+        const date = new Date(evt.startTime);
+        if (!isNaN(date.getTime())) {
+          timeStr = format(date, 'HH:mm');
+        }
+      }
+    } catch (e) {
+      console.error("Date format error", evt);
+    }
+
+    return {
+      id: evt.id,
+      title: evt.title,
+      time: timeStr,
+      location: evt.category || 'Pessoal'
+    };
+  });
 
   const mainStreak = streaks.length > 0 ? streaks[0] : null;
 
@@ -134,31 +154,31 @@ const Dashboard = () => {
     <div className="page-container max-w-[1600px] margin-0-auto pt-8 pb-12 space-y-6">
 
       {/* 1. Header: AI Daily Briefing */}
-      <DailyBriefingHeader name={fullName} />
+      <DailyBriefingHeader name={fullName} onProfileClick={() => navigate('/profile')} />
 
       {/* 2. Top Section: Daily Overview (Habits + Weekly Calendar) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* Habits Widget (Top Importance) */}
         <div className="lg:col-span-4 h-full">
-          <BentoCard onClick={() => navigate('/habits')} className="h-full border-[#EBFF57]/30 bg-[#EBFF57]/5">
+          <BentoCard onClick={() => navigate('/habits')} className="h-full border-primary/30 bg-primary/5">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <ListTodo className="w-5 h-5 text-[#EBFF57]" />
-                <span className="text-xs font-bold text-[#EBFF57] uppercase tracking-widest">HÁBITOS DIÁRIOS</span>
+                <ListTodo className="w-5 h-5 text-primary" />
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">HÁBITOS DIÁRIOS</span>
               </div>
-              <span className="text-xs text-white font-medium bg-[#EBFF57]/10 px-2 py-1 rounded-full">{habits.filter(h => h.completed).length}/{habits.length}</span>
+              <span className="text-xs text-foreground font-medium bg-primary/10 px-2 py-1 rounded-full">{habits.filter(h => h.completed).length}/{habits.length}</span>
             </div>
             <div className="space-y-3">
               {habits.slice(0, 5).map((h, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className={cn(
                     "w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0",
-                    h.completed ? "bg-[#EBFF57] border-[#EBFF57]" : "border-zinc-700 bg-transparent"
+                    h.completed ? "bg-primary border-primary" : "border-border bg-transparent"
                   )}>
                     {h.completed && <Check className="w-3 h-3 text-black" />}
                   </div>
-                  <span className={cn("text-sm font-medium truncate", h.completed ? "text-zinc-500 line-through" : "text-white")}>
+                  <span className={cn("text-sm font-medium truncate", h.completed ? "text-zinc-500 line-through" : "text-foreground")}>
                     {h.name || h.title || "Novo Hábito"}
                   </span>
                 </div>
@@ -169,7 +189,11 @@ const Dashboard = () => {
 
         {/* Weekly Calendar & Next Event */}
         <div className="lg:col-span-8 h-full">
-          <WeeklyCalendar appointments={formattedAppointments} />
+          <WeeklyCalendar
+            appointments={formattedAppointments}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+          />
         </div>
 
       </div>
@@ -181,28 +205,28 @@ const Dashboard = () => {
             <div className="p-2 bg-emerald-500/10 rounded-lg"><Wallet className="w-6 h-6 text-emerald-400" /></div>
             <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">SALDO TOTAL</h3>
           </div>
-          <p className={cn("text-4xl md:text-5xl font-light tracking-tight", totalBalance >= 0 ? "text-white" : "text-red-400")}>
+          <p className={cn("text-4xl md:text-5xl font-light tracking-tight", totalBalance >= 0 ? "text-foreground" : "text-red-400")}>
             R$ {totalBalance.toLocaleString('pt-BR', { notation: 'compact' })}
           </p>
-          <p className="text-sm text-zinc-500 mt-2">Disponível para uso imediato</p>
+          <p className="text-sm text-muted-foreground mt-2">Disponível para uso imediato</p>
         </BentoCard>
 
-        <div className="bg-card/30 border border-white/5 rounded-3xl p-6 md:col-span-2">
-          <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider mb-4">Controle Diário</h3>
+        <div className="bg-card/50 border border-border/50 rounded-3xl p-6 md:col-span-2 cursor-pointer hover:bg-card/40 transition-colors" onClick={() => navigate('/finances')}>
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Controle Diário</h3>
           <FinanceWidget todaySpent={spentToday} dailyBudget={200} />
-          <div className="flex gap-4 mt-6 pt-6 border-t border-white/5">
+          <div className="flex gap-4 mt-6 pt-6 border-t border-border/50">
             <div className="flex-1">
-              <p className="text-xs text-zinc-500">Próxima Fatura</p>
+              <p className="text-xs text-muted-foreground">Próxima Fatura</p>
               <div className="flex items-center gap-2 mt-1">
                 <CreditCard className="w-4 h-4 text-purple-400" />
-                <span className="text-lg text-white">R$ 1.250</span>
+                <span className="text-lg text-foreground">R$ 0,00</span>
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-zinc-500">Economia Mensal</p>
+              <p className="text-xs text-muted-foreground">Economia Mensal</p>
               <div className="flex items-center gap-2 mt-1">
                 <TrendingUp className="w-4 h-4 text-green-400" />
-                <span className="text-lg text-white">+15%</span>
+                <span className="text-lg text-foreground">0%</span>
               </div>
             </div>
           </div>
@@ -213,18 +237,27 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 opacity-80 hover:opacity-100 transition-opacity duration-500">
 
         {/* Goals Compact - Centered & Padded */}
-        {/* Goals Compact - Top Aligned & Reduced Height */}
-        <div className="lg:col-span-1 bg-card/20 border border-white/5 rounded-3xl p-5 min-h-[140px] relative grayscale hover:grayscale-0 transition-all flex flex-col justify-start">
-          <GoalsWidget goals={goalsMock} />
+        <div
+          className="lg:col-span-1 bg-card/50 border border-border/50 rounded-3xl p-5 min-h-[140px] relative grayscale hover:grayscale-0 transition-all flex flex-col justify-start cursor-pointer hover:bg-card/50"
+          onClick={() => navigate('/calendar?tab=goals')}
+        >
+          {/* TODO: Connect to Real Goals */}
+          <GoalsWidget goals={[]} />
         </div>
 
         {/* Reminders - Top Aligned & Reduced Height */}
-        <div className="lg:col-span-1 bg-card/20 border border-white/5 rounded-3xl overflow-hidden p-5 min-h-[140px] flex flex-col justify-start">
+        <div
+          className="lg:col-span-1 bg-card/50 border border-border/50 rounded-3xl overflow-hidden p-5 min-h-[140px] flex flex-col justify-start cursor-pointer hover:bg-card/50"
+          onClick={() => navigate('/calendar')}
+        >
           <RemindersWidget />
         </div>
 
         {/* Notes - Top Aligned & Reduced Height */}
-        <div className="lg:col-span-1 bg-card/20 border border-white/5 rounded-3xl overflow-hidden min-h-[140px] p-5 flex flex-col justify-start">
+        <div
+          className="lg:col-span-1 bg-card/50 border border-border/50 rounded-3xl overflow-hidden min-h-[140px] p-5 flex flex-col justify-start cursor-pointer hover:bg-card/50"
+          onClick={() => navigate('/books')} // Redirecting to books or fallback
+        >
           <QuickNotesWidget />
         </div>
 
@@ -237,10 +270,9 @@ const Dashboard = () => {
                 <Dumbbell className="w-5 h-5 text-orange-400" />
                 <div>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase">TREINO</p>
-                  <p className="text-sm font-medium text-white truncate max-w-[120px]">Superior B</p>
+                  <p className="text-sm font-medium text-white truncate max-w-[120px]">--</p>
                 </div>
               </div>
-              <Check className="w-4 h-4 text-zinc-600" />
             </div>
 
             {/* Diet Side */}
@@ -249,7 +281,7 @@ const Dashboard = () => {
                 <Apple className="w-5 h-5 text-pink-400" />
                 <div>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase">DIETA</p>
-                  <p className="text-sm font-medium text-white">1.250 kcal</p>
+                  <p className="text-sm font-medium text-white">--</p>
                 </div>
               </div>
             </div>
@@ -262,7 +294,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="bg-card/20 rounded-2xl p-4 border border-white/5 text-center">
-              <p className="text-xs text-zinc-500">Controle Off</p>
+              <p className="text-xs text-zinc-500">Sem Abstinências Ativas</p>
             </div>
           )}
         </div>

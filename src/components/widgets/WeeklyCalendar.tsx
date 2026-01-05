@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { isSameDay, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Appointment {
   id: string;
@@ -11,9 +13,11 @@ interface Appointment {
 
 interface WeeklyCalendarProps {
   appointments: Appointment[];
+  selectedDate?: Date;
+  onSelectDate?: (date: Date) => void;
 }
 
-export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
+export function WeeklyCalendar({ appointments, selectedDate = new Date(), onSelectDate }: WeeklyCalendarProps) {
   const today = new Date();
   const currentDayOfWeek = today.getDay();
 
@@ -24,14 +28,15 @@ export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
     return {
       dayName: date.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3),
       dayNumber: date.getDate(),
-      isToday: i === currentDayOfWeek,
+      isToday: isSameDay(date, today),
+      isSelected: isSameDay(date, selectedDate),
       date: date,
     };
   });
 
   return (
     <motion.div
-      className="widget-card"
+      className="widget-card h-full flex flex-col"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
@@ -41,8 +46,8 @@ export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
           <Calendar className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-light text-muted-foreground">Semana à Vista</h3>
         </div>
-        <Link to="/more" className="text-xs text-primary font-light hover:underline">
-          Ver tudo
+        <Link to="/calendar" className="text-xs text-primary font-light hover:underline">
+          Ver Calendário
         </Link>
       </div>
 
@@ -51,17 +56,20 @@ export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
         {weekDays.map((day, index) => (
           <motion.div
             key={index}
-            className={`flex flex-col items-center py-2 px-2 rounded-xl flex-1 transition-all ${day.isToday
-                ? 'bg-primary text-primary-foreground'
+            className={`flex flex-col items-center py-2 px-2 rounded-xl flex-1 transition-all cursor-pointer ${day.isSelected
+              ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+              : day.isToday
+                ? 'bg-secondary/20 text-secondary border border-secondary/30'
                 : 'bg-card hover:bg-muted'
               }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => onSelectDate?.(day.date)}
           >
-            <span className={`text-[10px] font-light uppercase ${day.isToday ? '' : 'text-muted-foreground'}`}>
+            <span className={`text-[10px] font-light uppercase ${day.isSelected || day.isToday ? '' : 'text-muted-foreground'}`}>
               {day.dayName}
             </span>
-            <span className={`text-sm font-regular mt-0.5 ${day.isToday ? '' : ''}`}>
+            <span className={`text-sm font-regular mt-0.5`}>
               {day.dayNumber}
             </span>
           </motion.div>
@@ -69,20 +77,22 @@ export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
       </div>
 
       {/* Upcoming Appointments */}
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground font-light mb-2">Próximos compromissos</p>
+      <div className="space-y-2 flex-1 overflow-y-auto pr-1">
+        <p className="text-xs text-muted-foreground font-light mb-2">
+          {isSameDay(selectedDate, today) ? "Compromissos de Hoje" : `Compromissos de ${format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR })}`}
+        </p>
         {appointments.length > 0 ? (
-          appointments.slice(0, 3).map((apt, index) => (
+          appointments.map((apt, index) => (
             <motion.div
               key={apt.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/30"
+              className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/30 hover:border-primary/30 transition-colors cursor-pointer"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 * index }}
             >
               <div className="w-1 h-10 rounded-full bg-primary" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-regular truncate">{apt.title}</p>
+                <p className="text-sm font-regular truncate text-foreground">{apt.title}</p>
                 <div className="flex items-center gap-3 mt-1">
                   <span className="flex items-center gap-1 text-xs text-muted-foreground font-light">
                     <Clock className="w-3 h-3" />
@@ -99,9 +109,9 @@ export function WeeklyCalendar({ appointments }: WeeklyCalendarProps) {
             </motion.div>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground font-light text-center py-4">
-            Nenhum compromisso agendado
-          </p>
+          <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-border/30 bg-muted/30 mt-4">
+            <span className="text-sm text-muted-foreground">Sem agendamentos</span>
+          </div>
         )}
       </div>
     </motion.div>
