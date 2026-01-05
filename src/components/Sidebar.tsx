@@ -48,10 +48,7 @@ export function Sidebar() {
         <div className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-white/5 bg-zinc-950/50 backdrop-blur-xl p-4 z-50">
             {/* 1. Header Logo */}
             <div className="flex items-center gap-2 px-2 py-6 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-lime-700 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white fill-white" />
-                </div>
-                <span className="font-bold text-lg tracking-tight">Ascend</span>
+                <img src="/logo.png" alt="Ascend Logo" className="h-10 w-auto object-contain" />
             </div>
 
             {/* 2. Main Navigation */}

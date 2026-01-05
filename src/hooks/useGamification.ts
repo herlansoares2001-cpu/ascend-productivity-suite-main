@@ -49,7 +49,7 @@ export function useGamification() {
                 .from('profiles')
                 .select('level, current_xp, current_streak')
                 .eq('id', user?.id)
-                .single();
+                .maybeSingle();
 
             if (data) {
                 setLevel(data.level || 1);

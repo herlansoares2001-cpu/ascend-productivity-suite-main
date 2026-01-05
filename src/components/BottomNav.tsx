@@ -5,7 +5,8 @@ import {
   CheckCircle2,
   Wallet,
   Calendar,
-  Sparkles
+  Sparkles,
+  User
 } from "lucide-react";
 import { AICopilot } from "@/components/AICopilot";
 
@@ -39,16 +40,21 @@ const navItems = [
 export function BottomNav() {
   const location = useLocation();
 
-  if (location.pathname === '/profile') return null;
+  const handleInteraction = () => {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
+  };
 
   return (
     <motion.nav
-      className="fixed bottom-6 z-50 glass rounded-full px-2 py-2 w-[90%] max-w-[380px] md:max-w-[480px]"
+      className="fixed bottom-6 z-50 glass rounded-full px-2 py-2 w-[90%] max-w-[380px] md:max-w-[480px] pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
       style={{
         boxShadow: "0 8px 32px -4px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.1)",
         left: "50%",
         marginLeft: "0",
-        marginRight: "0"
+        marginRight: "0",
+        bottom: "max(1.5rem, env(safe-area-inset-bottom))" // Lift it up above the home indicator properly
       }}
       initial={{ y: 100, opacity: 0, x: "-50%" }}
       animate={{ y: 0, opacity: 1, x: "-50%" }}
@@ -61,14 +67,16 @@ export function BottomNav() {
               <div key="ai-trigger" className="relative -top-6">
                 <AICopilot customTrigger={
                   <motion.div
+                    onTap={handleInteraction}
                     whileTap={{ scale: 0.9 }}
                     whileHover={{ scale: 1.05 }}
-                    className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg border-[6px] border-background"
+                    className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4F657] to-[#A3E635] flex items-center justify-center shadow-lg border-[6px] border-background relative overflow-hidden"
                     style={{
-                      boxShadow: "0 0 20px hsl(68 100% 67% / 0.6)"
+                      boxShadow: "0 0 25px rgba(212, 246, 87, 0.4)"
                     }}
                   >
-                    <Sparkles className="w-6 h-6 text-primary-foreground fill-primary-foreground" />
+                    <div className="absolute inset-0 bg-white/20 blur-sm rounded-full" />
+                    <Sparkles className="w-7 h-7 text-black fill-black/10 relative z-10" />
                   </motion.div>
                 } />
               </div>
@@ -82,6 +90,7 @@ export function BottomNav() {
             <RouterNavLink
               key={item.path}
               to={item.path}
+              onClick={handleInteraction}
               className={`nav-item flex-shrink-0 relative ${isActive ? "active" : "text-muted-foreground"}`}
             >
               <div className="flex flex-col items-center justify-center w-12 h-12">
@@ -90,7 +99,7 @@ export function BottomNav() {
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   className="relative z-10"
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} strokeWidth={isActive ? 2.5 : 2} />
                 </motion.div>
                 {isActive && (
                   <motion.div

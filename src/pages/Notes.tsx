@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  FileText, 
-  Plus, 
+import {
+  FileText,
+  Plus,
   Search,
   MoreVertical
 } from "lucide-react";
@@ -17,31 +17,31 @@ interface Note {
 }
 
 const initialNotes: Note[] = [
-  { 
-    id: "1", 
-    title: "Ideias para o projeto", 
-    content: "- Implementar dark mode\n- Adicionar animações\n- Revisar arquitetura", 
+  {
+    id: "1",
+    title: "Ideias para o projeto",
+    content: "- Implementar dark mode\n- Adicionar animações\n- Revisar arquitetura",
     date: "Hoje",
     color: "#EBFF57"
   },
-  { 
-    id: "2", 
-    title: "Lista de compras", 
-    content: "Frutas, legumes, proteínas, grãos integrais", 
+  {
+    id: "2",
+    title: "Lista de compras",
+    content: "Frutas, legumes, proteínas, grãos integrais",
     date: "Ontem",
     color: "#A2F7A1"
   },
-  { 
-    id: "3", 
-    title: "Resumo do livro", 
-    content: "Capítulo 3: O poder dos hábitos atômicos está na capacidade de...", 
+  {
+    id: "3",
+    title: "Resumo do livro",
+    content: "Capítulo 3: O poder dos hábitos atômicos está na capacidade de...",
     date: "3 dias atrás",
     color: "#4ECDC4"
   },
-  { 
-    id: "4", 
-    title: "Metas da semana", 
-    content: "1. Terminar relatório\n2. Reunião com equipe\n3. Revisar código", 
+  {
+    id: "4",
+    title: "Metas da semana",
+    content: "1. Terminar relatório\n2. Reunião com equipe\n3. Revisar código",
     date: "5 dias atrás",
     color: "#9B59B6"
   },
@@ -51,7 +51,7 @@ const Notes = () => {
   const [notes] = useState<Note[]>(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredNotes = notes.filter(note => 
+  const filteredNotes = notes.filter(note =>
     note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     note.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -59,7 +59,7 @@ const Notes = () => {
   return (
     <div className="page-container">
       {/* Header */}
-      <motion.header 
+      <motion.header
         className="mb-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,14 +71,14 @@ const Notes = () => {
       </motion.header>
 
       {/* Search */}
-      <motion.div 
+      <motion.div
         className="relative mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-        <input 
+        <input
           type="text"
           placeholder="Buscar notas..."
           value={searchQuery}
@@ -88,7 +88,7 @@ const Notes = () => {
       </motion.div>
 
       {/* Stats */}
-      <motion.div 
+      <motion.div
         className="flex gap-4 mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -106,13 +106,13 @@ const Notes = () => {
 
       {/* Notes Grid */}
       {filteredNotes.length === 0 ? (
-        <EmptyState 
+        <EmptyState
           icon={FileText}
           title="Nenhuma nota"
           description="Crie notas rápidas para organizar suas ideias."
         />
       ) : (
-        <motion.div 
+        <motion.div
           className="grid grid-cols-2 gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -128,7 +128,7 @@ const Notes = () => {
               whileHover={{ scale: 1.02 }}
             >
               <div className="flex items-start justify-between mb-2">
-                <div 
+                <div
                   className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: note.color }}
                 />
@@ -148,16 +148,17 @@ const Notes = () => {
 
       {/* FAB */}
       <motion.div
-        className="fixed bottom-24 right-5"
+        className="fixed right-5"
+        style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.4, type: "spring" }}
       >
-        <motion.button 
-          className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg glow-lime"
+        <motion.button
+          className="w-16 h-16 rounded-full bg-[#D4F657] text-black flex items-center justify-center shadow-[0_0_25px_rgba(212,246,87,0.4)]"
           whileTap={{ scale: 0.9 }}
         >
-          <Plus className="w-6 h-6 text-primary-foreground" />
+          <Plus className="w-8 h-8 stroke-[3px]" />
         </motion.button>
       </motion.div>
     </div>

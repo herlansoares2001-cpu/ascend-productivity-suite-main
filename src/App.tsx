@@ -35,11 +35,16 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { CommandCenter } from "@/components/CommandCenter";
+
+// ... existing imports ...
+
 function AppContent() {
   const { user, isLoading } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
+      <CommandCenter />
       <PageTransition>
         <Routes>
           {/* Public Routes */}

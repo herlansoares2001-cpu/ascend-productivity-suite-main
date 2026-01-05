@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGamification } from "@/hooks/useGamification";
@@ -16,16 +18,56 @@ export default function Achievements() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // Mock Stats (In the future, fetch these from Supabase: habits, transactions, etc.)
-    const [stats] = useState({
-        totalHabits: 150,
-        currentStreak: 15,
-        totalTransactions: 55,
-        totalTasks: 120,
-        booksRead: 5,
-        waterDays: 45,
-        workouts: 30,
-        events: 25
+
+
+    const { data: stats = {
+        totalHabits: 0,
+        currentStreak: 0,
+        totalTransactions: 0,
+        totalTasks: 0,
+        booksRead: 0,
+        waterDays: 0,
+        workouts: 0,
+        events: 0
+    } } = useQuery({
+        queryKey: ['achievements-stats', user?.id],
+        queryFn: async () => {
+            if (!user) return null;
+
+            const [
+                { count: habitsCount },
+                { count: transactionsCount },
+                { count: tasksCount },
+                { count: booksCount },
+                { count: eventsCount },
+                { data: profile }
+            ] = await Promise.all([
+                supabase.from('habits').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+                supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+                supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+                // @ts-ignore
+                supabase.from('books').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+                // @ts-ignore
+                supabase.from('events').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+                supabase.from('profiles').select('current_streak').eq('id', user.id).maybeSingle()
+            ]);
+
+            // For complex stats like 'waterDays' or 'workouts', we would need to query habit_completions 
+            // joined with specific habit categories. 
+            // For now, we'll zero them out to avoid fake unlocks, or you can implement logic later.
+
+            return {
+                totalHabits: habitsCount || 0,
+                currentStreak: profile?.current_streak || 0,
+                totalTransactions: transactionsCount || 0,
+                totalTasks: tasksCount || 0,
+                booksRead: booksCount || 0,
+                waterDays: 0, // Placeholder
+                workouts: 0,  // Placeholder
+                events: eventsCount || 0
+            };
+        },
+        enabled: !!user
     });
 
     const { level, progress: xpProgress } = useGamification();

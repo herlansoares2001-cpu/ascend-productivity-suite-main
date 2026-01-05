@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  Dumbbell, 
-  Plus, 
+import {
+  Dumbbell,
+  Plus,
   ChevronRight,
   Flame,
   Timer,
@@ -36,7 +36,7 @@ const Workout = () => {
   return (
     <div className="page-container">
       {/* Header */}
-      <motion.header 
+      <motion.header
         className="mb-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,7 +48,7 @@ const Workout = () => {
       </motion.header>
 
       {/* Stats Cards */}
-      <motion.div 
+      <motion.div
         className="grid grid-cols-3 gap-3 mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -72,7 +72,7 @@ const Workout = () => {
       </motion.div>
 
       {/* Week Progress */}
-      <motion.div 
+      <motion.div
         className="widget-card widget-card-green mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -83,10 +83,9 @@ const Workout = () => {
           {["S", "T", "Q", "Q", "S", "S", "D"].map((day, index) => {
             const completed = index < 5;
             return (
-              <div key={day} className="flex flex-col items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  completed ? "bg-primary-foreground/20" : "bg-primary-foreground/10"
-                }`}>
+              <div key={`${day}-${index}`} className="flex flex-col items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${completed ? "bg-primary-foreground/20" : "bg-primary-foreground/10"
+                  }`}>
                   {completed && <Dumbbell className="w-4 h-4" />}
                 </div>
                 <span className="text-xs font-light">{day}</span>
@@ -99,7 +98,7 @@ const Workout = () => {
       {/* Workouts List */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-regular">Últimos Treinos</h2>
-        <motion.button 
+        <motion.button
           className="w-9 h-9 rounded-full bg-primary flex items-center justify-center"
           whileTap={{ scale: 0.9 }}
         >
@@ -108,13 +107,13 @@ const Workout = () => {
       </div>
 
       {workouts.length === 0 ? (
-        <EmptyState 
+        <EmptyState
           icon={Dumbbell}
           title="Nenhum treino"
           description="Registre seus exercícios para acompanhar seu progresso."
         />
       ) : (
-        <motion.div 
+        <motion.div
           className="space-y-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

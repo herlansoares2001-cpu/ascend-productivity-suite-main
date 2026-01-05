@@ -64,11 +64,7 @@ export function DayAgendaView({ date, events }: DayAgendaViewProps) {
                         <p className="text-lg font-serif italic text-muted-foreground max-w-xs">
                             "A disciplina é a ponte entre metas e realizações."
                         </p>
-                        <div className="mt-8">
-                            <button className="text-lime-500 text-sm font-bold uppercase tracking-wider hover:underline">
-                                + Criar Novo Hábito
-                            </button>
-                        </div>
+
                     </div>
                 )}
 

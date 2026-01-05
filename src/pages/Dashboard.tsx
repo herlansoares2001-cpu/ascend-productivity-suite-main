@@ -53,7 +53,7 @@ const BentoCard = ({ children, className, onClick }: { children: React.ReactNode
   </motion.div>
 );
 
-const DailyBriefingHeader = ({ name, onProfileClick }: { name: string; onProfileClick: () => void }) => {
+const DailyBriefingHeader = ({ name, summary, onProfileClick }: { name: string; summary: string; onProfileClick: () => void }) => {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
@@ -69,7 +69,7 @@ const DailyBriefingHeader = ({ name, onProfileClick }: { name: string; onProfile
         <div className="flex items-center gap-2 mt-2">
           <Sparkles className="w-4 h-4 text-[#EBFF57]" />
           <p className="text-zinc-400 font-light text-sm md:text-base">
-            Hoje o foco é total: Treino B, 3 tarefas prioritárias e meta financeira em dia.
+            {summary || "Pronto para organizar sua vida hoje?"}
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ const DailyBriefingHeader = ({ name, onProfileClick }: { name: string; onProfile
       <Button
         variant="ghost"
         size="icon"
-        className="rounded-full hover:bg-white/5 transition-colors"
+        className="rounded-full hover:bg-white/5 transition-colors hidden md:flex"
         onClick={onProfileClick}
       >
         <User className="w-6 h-6 text-[#EBFF57]" />
@@ -94,6 +94,7 @@ const goalsMock = [
 ];
 
 // --- DASHBOARD COMPONENT ---
+// --- DASHBOARD COMPONENT ---
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -105,6 +106,19 @@ const Dashboard = () => {
   // State
   const [currentBook, setCurrentBook] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Dynamic AI Summary State
+  const [aiSummary, setAiSummary] = useState<string>("");
+
+  useEffect(() => {
+    // Try to get summary from localStorage or set default
+    const savedSummary = localStorage.getItem('ascend_ai_summary');
+    if (savedSummary) {
+      setAiSummary(savedSummary);
+    } else {
+      setAiSummary("Seus dados foram resetados. Comece a cadastrar hábitos para gerar novos insights.");
+    }
+  }, []);
 
   // 1. Fetch Data
   useEffect(() => {
@@ -154,7 +168,7 @@ const Dashboard = () => {
     <div className="page-container max-w-[1600px] margin-0-auto pt-8 pb-12 space-y-6">
 
       {/* 1. Header: AI Daily Briefing */}
-      <DailyBriefingHeader name={fullName} onProfileClick={() => navigate('/profile')} />
+      <DailyBriefingHeader name={fullName} summary={aiSummary} onProfileClick={() => navigate('/profile')} />
 
       {/* 2. Top Section: Daily Overview (Habits + Weekly Calendar) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -213,7 +227,10 @@ const Dashboard = () => {
 
         <div className="bg-card/50 border border-border/50 rounded-3xl p-6 md:col-span-2 cursor-pointer hover:bg-card/40 transition-colors" onClick={() => navigate('/finances')}>
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Controle Diário</h3>
-          <FinanceWidget todaySpent={spentToday} dailyBudget={200} />
+          <FinanceWidget
+            todaySpent={spentToday}
+            dailyBudget={user?.user_metadata?.daily_budget || 0}
+          />
           <div className="flex gap-4 mt-6 pt-6 border-t border-border/50">
             <div className="flex-1">
               <p className="text-xs text-muted-foreground">Próxima Fatura</p>

@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { ModernCalendar } from "@/components/calendar/ModernCalendar";
 import { DayAgendaView } from "@/components/calendar/DayAgendaView";
-import { Loader2, Plus, Clock, MapPin, Link as LinkIcon, Users, Bell, Repeat, Calendar as CalendarIcon, AlignLeft } from "lucide-react";
+import { Loader2, Plus, Clock, MapPin, Link as LinkIcon, Users, Bell, Repeat, Calendar as CalendarIcon, AlignLeft, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { isSameDay, format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
@@ -20,11 +20,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import Goals from "@/pages/Goals";
+import { HabitForm } from "@/components/forms/HabitForm"; // Adicionado
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"; // Adicionado
+import { useHabits } from "@/hooks/useHabits"; // Adicionado
 
 export default function CalendarPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: events = [], isLoading } = useCalendarData();
+  const { createHabit } = useHabits();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") === "goals" ? "goals" : "agenda";
 
@@ -32,7 +36,10 @@ export default function CalendarPage() {
   const [filter, setFilter] = useState<'all' | 'habit' | 'event'>('all');
   const [view, setView] = useState<'month' | 'week'>('month');
 
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // Modal States
+  const [isSelectionOpen, setIsSelectionOpen] = useState(false);
+  const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [isCreateHabitOpen, setIsCreateHabitOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- FORM STATES (Google Calendar Style) ---
@@ -61,7 +68,12 @@ export default function CalendarPage() {
     return false;
   });
 
-  const handleCreateNew = () => {
+  const handleFabClick = () => {
+    setIsSelectionOpen(true);
+  };
+
+  const openEventModal = () => {
+    setIsSelectionOpen(false);
     // Init form with selected date default
     const maxDateStr = format(selectedDate, "yyyy-MM-dd");
     setTitle("");
@@ -76,7 +88,24 @@ export default function CalendarPage() {
     setGuests("");
     setRecurrence("none");
     setCalendarContext("Pessoal");
-    setIsCreateModalOpen(true);
+    setIsCreateEventOpen(true);
+  };
+
+  const openHabitSheet = () => {
+    setIsSelectionOpen(false);
+    setIsCreateHabitOpen(true);
+  };
+
+  const handleCreateHabit = async (data: any) => {
+    try {
+      await createHabit.mutateAsync(data);
+      setIsCreateHabitOpen(false);
+      toast.success("Hábito criado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["calendar-data"] });
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao criar hábito.");
+    }
   };
 
   const handleSaveEvent = async () => {
@@ -91,7 +120,8 @@ export default function CalendarPage() {
 
       const guestList = guests.split(',').map(g => g.trim()).filter(g => g);
 
-      const { error } = await supabase
+      // @ts-ignore
+      const { error } = await (supabase as any)
         .from("events")
         .insert({
           user_id: user.id,
@@ -112,7 +142,7 @@ export default function CalendarPage() {
       if (error) throw error;
 
       toast.success("Evento agendado!");
-      setIsCreateModalOpen(false);
+      setIsCreateEventOpen(false);
       queryClient.invalidateQueries({ queryKey: ["calendar-data"] });
     } catch (error: any) {
       console.error(error);
@@ -126,20 +156,12 @@ export default function CalendarPage() {
     <div className="page-container min-h-screen w-full flex flex-col relative bg-background pb-32 md:pb-12">
 
       <Tabs defaultValue={defaultTab} className="w-full">
-
         {/* HEADER COM ABAS E SWITCH */}
         <div className="sticky top-0 z-20 w-full flex flex-col items-center bg-background/80 backdrop-blur-md border-b border-white/5 pt-4 pb-2 gap-4">
-          {/* Main Tabs (Agenda vs Metas) */}
           <TabsList className="bg-secondary/20 p-1 rounded-full border border-white/5">
             <TabsTrigger value="agenda" className="rounded-full px-6 data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Agenda 2026</TabsTrigger>
             <TabsTrigger value="goals" className="rounded-full px-6 data-[state=active]:bg-[#D4F657] data-[state=active]:text-black">Metas</TabsTrigger>
           </TabsList>
-
-          {/* View Switch Month/Week (Only visible on Agenda Tab) */}
-          {/* We can hide it via CSS when not in agenda, or standard React conditional. TabsContent lazy mounts so it's tricky to put this outside.
-                 But design wise, it looks better inside the Agenda content or global? 
-                 Let's put it inside the Agenda Content to hide it on Goals.
-             */}
         </div>
 
         <TabsContent value="agenda" className="mt-0">
@@ -226,13 +248,13 @@ export default function CalendarPage() {
             <DayAgendaView date={selectedDate} events={selectedDayEvents} />
           </div>
 
-          {/* 6. Botão FAB (Only on Agenda?) */}
+          {/* 6. Botão FAB */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="fixed bottom-24 right-4 md:bottom-8 md:right-8 h-16 w-16 text-black font-bold rounded-full shadow-[0_0_25px_rgba(212,246,87,0.5)] flex items-center justify-center z-[9999]"
+            className="fixed right-4 md:right-8 bottom-[calc(7.5rem+env(safe-area-inset-bottom))] md:bottom-8 h-16 w-16 text-black font-bold rounded-full shadow-[0_0_25px_rgba(212,246,87,0.5)] flex items-center justify-center z-[9999]"
             style={{ backgroundColor: '#D4F657' }}
-            onClick={handleCreateNew}
+            onClick={handleFabClick}
           >
             <Plus className="w-8 h-8 stroke-[3px]" />
           </motion.button>
@@ -244,11 +266,45 @@ export default function CalendarPage() {
         </TabsContent>
       </Tabs>
 
-      {/* 7. Modal */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+      {/* SELECTION DIALOG */}
+      <Dialog open={isSelectionOpen} onOpenChange={setIsSelectionOpen}>
+        <DialogContent className="sm:max-w-md bg-[#0a0a0a] border-white/10">
+          <DialogHeader>
+            <DialogTitle>O que deseja criar?</DialogTitle>
+            <DialogDescription>Adicione um novo evento à agenda ou comece um novo hábito.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={openEventModal}
+              className="flex flex-col items-center justify-center p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:bg-secondary/20 hover:border-[#D4F657]/30 transition-all gap-3 group"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                <CalendarIcon className="w-6 h-6 text-blue-400" />
+              </div>
+              <span className="font-medium text-blue-100">Evento</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={openHabitSheet}
+              className="flex flex-col items-center justify-center p-6 rounded-2xl bg-secondary/10 border border-white/5 hover:bg-secondary/20 hover:border-[#D4F657]/30 transition-all gap-3 group"
+            >
+              <div className="w-12 h-12 rounded-full bg-[#D4F657]/10 flex items-center justify-center group-hover:bg-[#D4F657]/20 transition-colors">
+                <CheckCircle2 className="w-6 h-6 text-[#D4F657]" />
+              </div>
+              <span className="font-medium text-[#D4F657]">Hábito</span>
+            </motion.button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* CREATE EVENT DIALOG */}
+      <Dialog open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
         <DialogContent className="max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-[#D4F657]/20 p-0 gap-0 rounded-2xl">
           <DialogDescription className="sr-only">Formulário para criar novo evento</DialogDescription>
-
           {/* Header: Action Bar */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 sticky top-0 z-50 backdrop-blur-xl">
             <DialogTitle className="text-lg font-medium flex items-center gap-2">
@@ -433,6 +489,15 @@ export default function CalendarPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* CREATE HABIT SHEET */}
+      <Sheet open={isCreateHabitOpen} onOpenChange={setIsCreateHabitOpen}>
+        <SheetContent side="bottom" className="h-[auto] max-h-[90vh] overflow-y-auto rounded-t-3xl bg-[#0a0a0a] border-t border-white/10">
+          <SheetHeader className="mb-6"><SheetTitle>Novo Hábito</SheetTitle></SheetHeader>
+          <HabitForm onSubmit={handleCreateHabit} onCancel={() => setIsCreateHabitOpen(false)} isLoading={createHabit.isPending} />
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }

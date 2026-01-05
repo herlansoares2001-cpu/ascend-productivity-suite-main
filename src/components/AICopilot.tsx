@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Send, Sparkles, Loader2, Bot } from "lucide-react";
@@ -140,6 +140,9 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
             <Bot className="w-5 h-5 text-primary" />
             Ascend Copilot
           </SheetTitle>
+          <SheetDescription className="hidden">
+            Interface de chat com o Ascend Copilot (IA)
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1 p-4">
@@ -179,7 +182,7 @@ export function AICopilot({ customTrigger }: { customTrigger?: React.ReactNode }
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ex: Como estão as minhas finanças?"
+              placeholder="Pergunte ao Segundo Cérebro AI... sobre as minhas finanças?"
               disabled={isLoading}
             />
             <Button type="submit" size="icon" disabled={isLoading}>

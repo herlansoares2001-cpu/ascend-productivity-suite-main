@@ -40,30 +40,42 @@ export function DangerZone() {
 
         setIsDeletingAccount(true);
         try {
-            // Trying standard deleteUser call (often blocked client-side)
+            // 1. Try to delete the user from Auth (RP call)
             const { error } = await supabase.rpc('delete_user');
 
-            if (error) {
-                // If RPC fails or doesn't exist, try manual data wipe + sign out as fallback
-                console.warn("RPC delete_user failed or missing, wiping data instead.", error);
-
-                // Manually trigger reset logic if delete fails (fallback)
-                // Note: userResetAccount is async mutation, but we want to wait here.
-                // MutateAsync is better if available, but useMutation provides mutate.
-                // Let's just try to call the reset RPC directly here as fallback to avoid hook state complexity in this specific fallback flow,
-                // OR just call resetAccount.mutateAsync() if I update the hook to return it, but standard useMutation returns mutate (void) and mutateAsync (promise).
-                // Let's use mutateAsync.
-                await resetAccount.mutateAsync();
-
-                toast.info("Conta limpa e desconectada. (Exclusão total requer suporte)");
-            } else {
+            if (!error) {
+                // SUCCESS: User is deleted from DB.
+                // The session token is now invalid, so signOut() would likely 403.
+                // We just force clear client state.
                 toast.success("Conta excluída permanentemente.");
+
+                // Manually clear storage to be safe
+                localStorage.clear();
+
+                // Force redirect to login
+                window.location.href = "/auth";
+                return;
             }
 
-            await signOut();
+            // FAILURE: RPC failed/missing. Fallback to data wipe.
+            console.warn("RPC delete_user failed, wiping data instead.", error);
+
+            // 2. Wipe Data (Fallback)
+            await resetAccount.mutateAsync();
+            toast.info("Dados limpos (Exclusão total requer suporte ou execução do SQL).");
+
+            // 3. Sign Out (safe)
+            try {
+                await signOut();
+            } catch (e) {
+                console.error("SignOut failed", e);
+            }
+
+            window.location.href = "/auth";
+
         } catch (error) {
             console.error(error);
-            toast.error("Erro ao excluir conta.");
+            toast.error("Erro ao tentar excluir conta.");
         } finally {
             setIsDeletingAccount(false);
             setOpenDeleteModal(false);
@@ -126,16 +138,18 @@ export function DangerZone() {
                         <AlertDialogContent className="bg-zinc-950 border-red-500/20">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-red-500">Excluir Conta Permanentemente</AlertDialogTitle>
-                                <AlertDialogDescription className="space-y-4">
-                                    <p>Esta ação é <strong>irreversível</strong>. Todos os seus dados serão perdidos para sempre.</p>
-                                    <div className="space-y-2">
-                                        <p className="text-sm">Digite <strong>DELETAR</strong> para confirmar:</p>
-                                        <Input
-                                            value={deleteInput}
-                                            onChange={(e) => setDeleteInput(e.target.value)}
-                                            className="bg-black/50 border-red-500/30 text-red-500 placeholder:text-red-500/20"
-                                            placeholder="DELETAR"
-                                        />
+                                <AlertDialogDescription asChild className="space-y-4">
+                                    <div>
+                                        <p>Esta ação é <strong>irreversível</strong>. Todos os seus dados serão perdidos para sempre.</p>
+                                        <div className="space-y-2">
+                                            <p className="text-sm">Digite <strong>DELETAR</strong> para confirmar:</p>
+                                            <Input
+                                                value={deleteInput}
+                                                onChange={(e) => setDeleteInput(e.target.value)}
+                                                className="bg-black/50 border-red-500/30 text-red-500 placeholder:text-red-500/20"
+                                                placeholder="DELETAR"
+                                            />
+                                        </div>
                                     </div>
                                 </AlertDialogDescription>
                             </AlertDialogHeader>

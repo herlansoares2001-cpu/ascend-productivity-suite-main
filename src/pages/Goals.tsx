@@ -56,7 +56,7 @@ const Goals = () => {
   // State
   const [goals, setGoals] = useState<Goal[]>(() => {
     const saved = localStorage.getItem('ascend_goals');
-    return saved ? JSON.parse(saved) : DEFAULT_GOALS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);

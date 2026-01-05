@@ -277,9 +277,9 @@ const Finances = () => {
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div onClick={() => setIsNewCardOpen(true)} className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-muted/10 transition-colors h-[200px]">
-          <Plus className="w-8 h-8 mb-2" />
-          <span>Adicionar Cartão</span>
+        <div onClick={() => setIsNewCardOpen(true)} className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-4 md:p-6 flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-muted/5 transition-colors min-h-[160px] md:h-[200px]">
+          <Plus className="w-8 h-8 mb-2 opacity-50" />
+          <span className="text-sm font-medium">Adicionar Cartão</span>
         </div>
         {cards.map(card => {
           const cardTxs = creditTransactions.filter(t => t.card_id === card.id);
@@ -321,14 +321,13 @@ const Finances = () => {
         <h1 className="text-2xl font-regular mb-1">Finanças</h1>
 
         {/* Profile Icon (Consistent with Dashboard) */}
-        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 transition-colors">
+        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/5 transition-colors hidden md:flex">
           <User className="w-6 h-6 text-[#E9FF57]" />
         </Button>
       </motion.header>
 
       {/* Tabs */}
-      {/* Tabs */}
-      <motion.div className="flex gap-3 mb-8 overflow-x-auto scrollbar-hide py-1">
+      <motion.div className="flex gap-3 mb-8 overflow-x-auto scrollbar-hide py-1 -mx-4 px-4 md:mx-0 md:px-0">
         {[
           { id: 'overview', label: 'Visão Geral', icon: Layers },
           { id: 'accounts', label: 'Contas', icon: Landmark },
@@ -454,9 +453,16 @@ const Finances = () => {
       </AnimatePresence>
 
       {(activeTab !== 'cards' || selectedCardId) && (
-        <motion.div className="fixed bottom-24 right-5 z-40" initial={{ scale: 0 }} animate={{ scale: 1 }} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
-          <button className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg glow-lime" onClick={() => { setEditingTransaction(null); setIsSheetOpen(true); }}>
-            <Plus className="w-6 h-6" />
+        <motion.div
+          className="fixed right-5 z-40"
+          style={{ bottom: "calc(7.5rem + env(safe-area-inset-bottom))" }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <button className="w-16 h-16 rounded-full bg-[#D4F657] text-black flex items-center justify-center shadow-[0_0_25px_rgba(212,246,87,0.4)] transition-transform active:scale-95" onClick={() => { setEditingTransaction(null); setIsSheetOpen(true); }}>
+            <Plus className="w-8 h-8 stroke-[3px]" />
           </button>
         </motion.div>
       )}

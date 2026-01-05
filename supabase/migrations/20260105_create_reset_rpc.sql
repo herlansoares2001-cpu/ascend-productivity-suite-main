@@ -1,4 +1,4 @@
--- Criação da função segura de reset
+-- Criação da função segura de reset (VERSÃO CORRIGIDA - TABELA HABIT_STREAKS)
 CREATE OR REPLACE FUNCTION reset_account()
 RETURNS void
 LANGUAGE plpgsql
@@ -20,9 +20,8 @@ BEGIN
     DELETE FROM public.transaction_items WHERE user_id = v_user_id;
   EXCEPTION WHEN undefined_table THEN NULL; END;
   
-  BEGIN
-    DELETE FROM public.streaks WHERE user_id = v_user_id;
-  EXCEPTION WHEN undefined_table THEN NULL; END;
+  -- CORREÇÃO: Tabela correta é 'habit_streaks', não 'streaks'
+  DELETE FROM public.habit_streaks WHERE user_id = v_user_id;
   
   -- 2. Apagar tabelas principais
   DELETE FROM public.tasks WHERE user_id = v_user_id;
@@ -48,7 +47,7 @@ BEGIN
   DELETE FROM public.credit_cards WHERE user_id = v_user_id;
   DELETE FROM public.accounts WHERE user_id = v_user_id;
 
-  -- 4. Resetar Perfil (Removido updated_at pois não existe em algumas versões)
+  -- 4. Resetar Perfil
   UPDATE public.profiles 
   SET 
     level = 1,
