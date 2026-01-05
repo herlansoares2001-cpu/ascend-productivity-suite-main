@@ -16,34 +16,20 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/hooks/useAuth';
+import { useResetAccount } from '@/hooks/useProfile';
 
 export function DangerZone() {
-    const { user, signOut } = useAuth();
-    const [isDeletingData, setIsDeletingData] = useState(false);
+    const { signOut } = useAuth();
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [deleteInput, setDeleteInput] = useState("");
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
 
+    // Hook for resetting account
+    const resetAccount = useResetAccount();
+    const isResetting = resetAccount.isPending;
+
     const handleResetAllData = async () => {
-        if (!user) return;
-        setIsDeletingData(true);
-        try {
-            // Call server-side RPC to delete all data transactionally
-            const { error } = await supabase.rpc('reset_user_data');
-
-            if (error) throw error;
-
-            toast.success("Dados resetados com sucesso. Bem-vindo ao recomeço!");
-
-            // Refresh page to clear all local state and caches
-            setTimeout(() => window.location.reload(), 1500);
-
-        } catch (error) {
-            console.error('Error resetting data:', error);
-            toast.error("Erro ao resetar dados. Tente novamente.");
-        } finally {
-            setIsDeletingData(false);
-        }
+        resetAccount.mutate();
     };
 
     const handleDeleteAccount = async () => {
@@ -54,16 +40,21 @@ export function DangerZone() {
 
         setIsDeletingAccount(true);
         try {
-            // Attempt to call a hypothetical edge function or RPC if available
-            // If not, we do a soft delete or just throw an error saying contact support
-
             // Trying standard deleteUser call (often blocked client-side)
             const { error } = await supabase.rpc('delete_user');
 
             if (error) {
                 // If RPC fails or doesn't exist, try manual data wipe + sign out as fallback
                 console.warn("RPC delete_user failed or missing, wiping data instead.", error);
-                await handleResetAllData();
+
+                // Manually trigger reset logic if delete fails (fallback)
+                // Note: userResetAccount is async mutation, but we want to wait here.
+                // MutateAsync is better if available, but useMutation provides mutate.
+                // Let's just try to call the reset RPC directly here as fallback to avoid hook state complexity in this specific fallback flow,
+                // OR just call resetAccount.mutateAsync() if I update the hook to return it, but standard useMutation returns mutate (void) and mutateAsync (promise).
+                // Let's use mutateAsync.
+                await resetAccount.mutateAsync();
+
                 toast.info("Conta limpa e desconectada. (Exclusão total requer suporte)");
             } else {
                 toast.success("Conta excluída permanentemente.");
@@ -96,7 +87,7 @@ export function DangerZone() {
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50">
-                                {isDeletingData ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                                {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
                                 Começar do Zero
                             </Button>
                         </AlertDialogTrigger>

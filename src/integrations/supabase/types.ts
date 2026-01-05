@@ -323,7 +323,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      reset_user_data: {
+      get_finance_summary: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          spent_today: number
+          spent_month: number
+          spent_last_month: number
+          income_month: number
+        }[]
+      }
+      reset_account: {
         Args: Record<PropertyKey, never>
         Returns: void
       }

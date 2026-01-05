@@ -21,7 +21,7 @@ export function useProfile() {
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -37,7 +37,7 @@ export function useProfile() {
   const updateProfile = useMutation({
     mutationFn: async (data: Partial<Profile>) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { error } = await supabase
         .from("profiles")
         .update(data)
@@ -57,7 +57,7 @@ export function useProfile() {
   const updatePomodoroDuration = useMutation({
     mutationFn: async (duration: number) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { error } = await supabase
         .from("profiles")
         .update({ pomodoro_duration: duration })
@@ -76,4 +76,33 @@ export function useProfile() {
     updateProfile,
     updatePomodoroDuration,
   };
+}
+
+export function useResetAccount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('reset_account');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Conta resetada com sucesso!", {
+        description: "Todos os seus dados foram apagados."
+      });
+
+      // CRÍTICO: Invalida e reseta todas as queries para a UI ficar vazia imediatamente
+      queryClient.resetQueries();
+      queryClient.invalidateQueries();
+
+      // Opcional: Redirecionar para dashboard ou recarregar
+      window.location.href = "/";
+    },
+    onError: (error: any) => {
+      console.error("Erro ao resetar:", error);
+      toast.error("Erro ao resetar conta", {
+        description: error.message || "Tente novamente mais tarde."
+      });
+    }
+  });
 }

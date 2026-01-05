@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
+import { Layout } from "@/components/Layout";
 import { PageTransition } from "@/components/PageTransition";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -41,26 +42,29 @@ function AppContent() {
     <div className="min-h-screen bg-background">
       <PageTransition>
         <Routes>
+          {/* Public Routes */}
           <Route path="/auth" element={<AuthRedirect><Auth /></AuthRedirect>} />
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/habits" element={<ProtectedRoute><Habits /></ProtectedRoute>} />
-          <Route path="/finances" element={<ProtectedRoute><Finances /></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-          <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
-          <Route path="/workout" element={<ProtectedRoute><Workout /></ProtectedRoute>} />
-          <Route path="/diet" element={<ProtectedRoute><Diet /></ProtectedRoute>} />
-          <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
-          {/* <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} /> */}
-          <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+
+          {/* Protected Routes with Layout */}
+          <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/habits" element={<ProtectedRoute><Layout><Habits /></Layout></ProtectedRoute>} />
+          <Route path="/finances" element={<ProtectedRoute><Layout><Finances /></Layout></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><Layout><CalendarPage /></Layout></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><Layout><Goals /></Layout></ProtectedRoute>} />
+          <Route path="/workout" element={<ProtectedRoute><Layout><Workout /></Layout></ProtectedRoute>} />
+          <Route path="/diet" element={<ProtectedRoute><Layout><Diet /></Layout></ProtectedRoute>} />
+          <Route path="/books" element={<ProtectedRoute><Layout><Books /></Layout></ProtectedRoute>} />
+
+          {/* Profile Pages wrapped in Layout too for consistency, or keep them standalone if preferred. 
+              Let's wrap them for the "System" feel.
+          */}
+          <Route path="/profile/edit" element={<ProtectedRoute><Layout><ProfileEdit /></Layout></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+          <Route path="/achievements" element={<ProtectedRoute><Layout><Achievements /></Layout></ProtectedRoute>} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
-      {user && !isLoading && (
-        <BottomNav />
-      )}
-
     </div>
   );
 }

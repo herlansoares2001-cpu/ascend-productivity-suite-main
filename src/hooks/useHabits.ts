@@ -108,6 +108,7 @@ export function useHabits() {
       });
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 
   const { data: streak = 0 } = useQuery({
@@ -140,6 +141,7 @@ export function useHabits() {
       return currentStreak;
     },
     enabled: !!user && habits.length > 0,
+    staleTime: 1000 * 60 * 30, // 30 minutes cache for streaks
   });
 
   const createHabit = useMutation({
