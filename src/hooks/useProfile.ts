@@ -91,12 +91,30 @@ export function useResetAccount() {
         description: "Todos os seus dados foram apagados."
       });
 
-      // CRÍTICO: Invalida e reseta todas as queries para a UI ficar vazia imediatamente
+      // 1. Limpa LocalStorage (Crucial para temas, configurações e caches manuais)
+      // 1. Limpa LocalStorage (Crucial para temas, configurações e caches manuais)
+      // Remove chaves específicas que podem conter a "Saudação" antiga
+      const keysToRemove = [
+        'habit-storage',
+        'finance-storage',
+        'streak-storage'
+      ];
+
+      // Loop para remover chaves do app, mantendo a sessão do Supabase segura
+      Object.keys(localStorage).forEach(key => {
+        if (keysToRemove.includes(key) || key.startsWith('ascend_') || key.startsWith('tanstack')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // 2. CRÍTICO: Invalida e reseta todas as queries para a UI ficar vazia imediatamente
       queryClient.resetQueries();
       queryClient.invalidateQueries();
 
-      // Opcional: Redirecionar para dashboard ou recarregar
-      window.location.href = "/";
+      // 3. Force Reload para garantir que o React Query e Contextos zerem
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     },
     onError: (error: any) => {
       console.error("Erro ao resetar:", error);
