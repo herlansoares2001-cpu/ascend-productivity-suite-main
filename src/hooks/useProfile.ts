@@ -100,9 +100,7 @@ export function useResetAccount() {
     },
     onError: (error: any) => {
       console.error("Erro ao resetar:", error);
-      toast.error("Erro ao resetar conta", {
-        description: error.message || "Tente novamente mais tarde."
-      });
+      toast.error(error.message || "Erro ao resetar dados. Tente novamente.");
     }
   });
 }

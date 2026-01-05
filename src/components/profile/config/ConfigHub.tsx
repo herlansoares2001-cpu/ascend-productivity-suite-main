@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Moon, Settings as SettingsIcon, Bell, Shield, Lock, Download,
     HelpCircle, FileText, LogOut, ChevronRight, User, Palette, FolderOpen, Trophy,
-    RefreshCw, Trash2, Smartphone, Sun
+    Smartphone, Sun
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
+import { DangerZone } from "@/components/profile/settings/DangerZone";
 
 export function ConfigHub() {
     const { user, signOut } = useAuth();
@@ -224,68 +225,6 @@ export function ConfigHub() {
         }
     };
 
-    const handleResetData = async () => {
-        if (!user) return;
-        const confirm = window.confirm("TEM CERTEZA? Isso apagará TODOS os seus dados (hábitos, finanças, tarefas, cartões, contas). O app será ZERADO para este usuário. Esta ação é irreversível.");
-        if (!confirm) return;
-
-        try {
-            toast.loading("Resetando TUDO...");
-
-            // Delete from all related tables
-            await Promise.all([
-                supabase.from('habits').delete().eq('user_id', user.id),
-                supabase.from('transactions').delete().eq('user_id', user.id),
-                supabase.from('tasks').delete().eq('user_id', user.id),
-                supabase.from('notes').delete().eq('user_id', user.id),
-                supabase.from('books').delete().eq('user_id', user.id),
-                supabase.from('accounts').delete().eq('user_id', user.id),
-                supabase.from('credit_cards').delete().eq('user_id', user.id),
-                supabase.from('reminders').delete().eq('user_id', user.id),
-                // Add any other user-related tables here
-            ]);
-
-            // Clear LocalStorage (Themes, Goals, etc)
-            localStorage.removeItem('ascend_goals');
-            localStorage.removeItem('ascend_notifications');
-            // Maybe keep theme? Or reset it too? User said "ZERAR TUDO". Let's reset theme too basically.
-            localStorage.removeItem('ascend_app_lock');
-            localStorage.removeItem('ascend_theme');
-
-            toast.dismiss();
-            toast.success("App resetado com sucesso.");
-            window.location.reload();
-        } catch (error) {
-            toast.dismiss();
-            toast.error("Erro ao resetar dados.");
-            console.error(error);
-        }
-    };
-
-    const handleDeleteAccount = async () => {
-        const confirm = window.confirm("PERIGO! Você está prestes a apagar sua conta permanentemente. Todos os dados serão perdidos. Deseja continuar?");
-        if (!confirm) return;
-
-        try {
-            toast.loading("Processando exclusão...");
-            const { error } = await supabase.rpc('delete_user');
-
-            if (error) {
-                console.error(error);
-                // Fallback or specific message
-                toast.dismiss();
-                toast.error("Não foi possível apagar automaticamente. Contate o suporte.");
-            } else {
-                toast.dismiss();
-                toast.success("Conta apagada com sucesso.");
-                signOut();
-            }
-        } catch (error) {
-            toast.dismiss();
-            toast.error("Erro ao processar exclusão.");
-        }
-    };
-
     // --- COMPONENTS ---
     const MenuItem = ({ icon: Icon, label, onClick, showArrow = true, danger = false }: any) => (
         <div
@@ -395,22 +334,7 @@ export function ConfigHub() {
                 </div >
 
                 {/* Group: Danger Zone */}
-                < div className="space-y-1" >
-                    <h3 className="text-xs font-bold text-red-500/50 uppercase tracking-wider px-4 mb-2">Zona de Perigo</h3>
-                    <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
-                        <MenuItem
-                            icon={RefreshCw}
-                            label="Começar do Zero (Resetar TUDO)"
-                            onClick={handleResetData}
-                        />
-                        <MenuItem
-                            icon={Trash2}
-                            label="Apagar Minha Conta"
-                            danger={true}
-                            onClick={handleDeleteAccount}
-                        />
-                    </div>
-                </div >
+                <DangerZone />
 
             </div >
 
