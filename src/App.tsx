@@ -19,10 +19,10 @@ import Profile from "./pages/Profile";
 import Goals from "./pages/Goals";
 import Workout from "./pages/Workout";
 import Diet from "./pages/Diet";
-import Books from "./pages/Books";
 import ProfileEdit from "./pages/ProfileEdit";
 import Achievements from "./pages/Achievements";
-// import Notes from "./pages/Notes"; // Disabled for MVP
+import Notes from "./pages/Notes";
+import Plans from "./pages/Plans";
 
 const queryClient = new QueryClient();
 
@@ -74,12 +74,13 @@ function AppContent() {
           <Route path="/goals" element={<ProtectedRoute><Layout><Goals /></Layout></ProtectedRoute>} />
           <Route path="/workout" element={<ProtectedRoute><Layout><Workout /></Layout></ProtectedRoute>} />
           <Route path="/diet" element={<ProtectedRoute><Layout><Diet /></Layout></ProtectedRoute>} />
-          <Route path="/books" element={<ProtectedRoute><Layout><Books /></Layout></ProtectedRoute>} />
+          <Route path="/notes" element={<ProtectedRoute><Layout><Notes /></Layout></ProtectedRoute>} />
 
           {/* Profile Pages wrapped in Layout too for consistency, or keep them standalone if preferred. 
               Let's wrap them for the "System" feel.
           */}
           <Route path="/profile/edit" element={<ProtectedRoute><Layout><ProfileEdit /></Layout></ProtectedRoute>} />
+          <Route path="/plans" element={<ProtectedRoute><Layout><Plans /></Layout></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
           <Route path="/achievements" element={<ProtectedRoute><Layout><Achievements /></Layout></ProtectedRoute>} />
 

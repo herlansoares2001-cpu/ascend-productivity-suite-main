@@ -89,10 +89,6 @@ export function CommandCenter() {
                         <Dumbbell className="mr-2 h-4 w-4" />
                         <span>Treino</span>
                     </CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => navigate('/books'))}>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        <span>Biblioteca</span>
-                    </CommandItem>
                 </CommandGroup>
 
                 <CommandSeparator />

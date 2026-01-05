@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Moon, Settings as SettingsIcon, Bell, Shield, Lock, Download,
     HelpCircle, FileText, LogOut, ChevronRight, User, Palette, FolderOpen, Trophy,
-    Smartphone, Sun
+    Smartphone, Sun, CheckCircle2, CreditCard
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -273,7 +273,7 @@ export function ConfigHub() {
                     <Avatar className="w-16 h-16 border-2 border-[#E9FF57]">
                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} />
                         <AvatarFallback>U</AvatarFallback>
-                    </Avatar >
+                    </Avatar>
                     <div>
                         <h2 className="font-semibold text-lg text-foreground">{user?.user_metadata?.full_name || 'Usuário Ascend'}</h2>
                         <p className="text-sm text-zinc-400 mb-1">{user?.email}</p>
@@ -281,17 +281,24 @@ export function ConfigHub() {
                             Ascend Pro (Lvl {user?.user_metadata?.level || 1})
                         </Badge>
                     </div>
-                </div >
+                </div>
                 <Button variant="ghost" size="sm" className="flex text-muted-foreground hover:text-foreground" onClick={() => navigate('/profile/edit')}>
                     Editar
                 </Button>
-            </div >
+            </div>
 
             {/* Settings Lists */}
-            < div className="space-y-6" >
+            <div className="space-y-6">
 
                 {/* Group: Preferences */}
-                < div className="space-y-1" >
+                <div className="space-y-1">
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Assinatura</h3>
+                    <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
+                        <MenuItem icon={CreditCard} label="Gerenciar Plano" onClick={() => navigate('/plans')} />
+                    </div>
+                </div>
+
+                <div className="space-y-1">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Preferências</h3>
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
                         <MenuItem icon={User} label="Editar Perfil" onClick={() => navigate('/profile/edit')} />
@@ -303,28 +310,28 @@ export function ConfigHub() {
                         />
                         {/* Removed Categorias */}
                     </div>
-                </div >
+                </div>
 
                 {/* Group: Notifications */}
-                < div className="space-y-1" >
+                <div className="space-y-1">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Notificações Local</h3>
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
                         <SwitchItem icon={Bell} label="Lembretes de Hábitos" checked={notifications.habits} onCheckedChange={() => toggleNotification('habits')} />
                         <SwitchItem icon={Bell} label="Resumo Diário (IA)" checked={notifications.ai} onCheckedChange={() => toggleNotification('ai')} />
                     </div>
-                </div >
+                </div>
 
                 {/* Group: Security */}
-                < div className="space-y-1" >
+                <div className="space-y-1">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Segurança</h3>
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
                         <SwitchItem icon={Smartphone} label="Bloqueio do App (PIN)" checked={appLock} onCheckedChange={toggleAppLock} />
                         <MenuItem icon={Lock} label="Alterar Senha" onClick={() => setIsPasswordOpen(true)} />
                     </div>
-                </div >
+                </div>
 
                 {/* Group: Data & Support */}
-                < div className="space-y-1" >
+                <div className="space-y-1">
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Dados e Suporte</h3>
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
                         <MenuItem icon={Download} label="Exportar Meus Dados (Backup)" onClick={handleExportData} />
@@ -332,24 +339,24 @@ export function ConfigHub() {
                         <MenuItem icon={HelpCircle} label="Ajuda e Suporte" onClick={() => window.open('https://support.google.com', '_blank')} />
                         <MenuItem icon={FileText} label="Termos de Uso" showArrow={false} onClick={() => window.open('#', '_blank')} />
                     </div>
-                </div >
+                </div>
 
                 {/* Group: Danger Zone */}
                 <DangerZone />
 
-            </div >
+            </div>
 
             {/* Footer */}
-            < div className="mt-12 flex flex-col items-center gap-4" >
+            <div className="mt-12 flex flex-col items-center gap-4">
                 <Button variant="ghost" className="text-red-500 hover:text-red-400 hover:bg-red-500/10 w-full max-w-xs" onClick={() => signOut()}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Sair da Conta
                 </Button>
                 <p className="text-[10px] text-zinc-600">Versão 1.2.0 (Beta)</p>
-            </div >
+            </div>
 
             {/* --- DIALOGS --- */}
-            < Dialog open={isPasswordOpen} onOpenChange={setIsPasswordOpen} >
+            <Dialog open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Alterar Senha</DialogTitle>
@@ -386,8 +393,8 @@ export function ConfigHub() {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog >
+            </Dialog>
 
-        </div >
+        </div>
     );
 }

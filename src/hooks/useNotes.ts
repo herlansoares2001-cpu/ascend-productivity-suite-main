@@ -21,7 +21,7 @@ export function useNotes() {
     queryKey: ["notes", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
+
       const { data, error } = await supabase
         .from("notes")
         .select("*")
@@ -68,7 +68,7 @@ export function useNotes() {
   const createNote = useMutation({
     mutationFn: async (content: string) => {
       if (!user) throw new Error("Not authenticated");
-      
+
       const { error } = await supabase
         .from("notes")
         .insert({ user_id: user.id, content, is_quick_note: false });
@@ -96,6 +96,7 @@ export function useNotes() {
     isLoading,
     updateQuickNote,
     createNote,
+    updateNote: updateNoteMutation, // Exporting the mutation directly
     deleteNote,
   };
 }
