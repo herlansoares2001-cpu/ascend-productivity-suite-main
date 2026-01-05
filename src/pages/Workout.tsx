@@ -9,6 +9,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { toast } from "sonner";
 
 interface Workout {
   id: string;
@@ -101,6 +102,7 @@ const Workout = () => {
         <motion.button
           className="w-9 h-9 rounded-full bg-primary flex items-center justify-center"
           whileTap={{ scale: 0.9 }}
+          onClick={() => toast.info("Funcionalidade em desenvolvimento")}
         >
           <Plus className="w-5 h-5 text-primary-foreground" />
         </motion.button>

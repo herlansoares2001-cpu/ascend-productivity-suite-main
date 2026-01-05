@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Mail, Lock, User, Loader2, Chrome } from "lucide-react";
 import { z } from "zod";
 
-
 const authSchema = z.object({
   email: z.string().trim().email({ message: "Email inválido" }),
   password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
@@ -28,7 +27,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,9 +76,6 @@ export default function Auth() {
           }
         } else {
           toast.success("Conta criada! Verifique seu email se necessário.");
-          // Auto login or redirect? Typically Supabase auto-logs in unless email confirm is strictly enforced blocking login.
-          // If strictly enforced, they can't login yet.
-          // Let's assume auto-login works or redirect to dashboard.
           navigate("/");
         }
       }
@@ -88,11 +84,9 @@ export default function Auth() {
     }
   };
 
-  // ... (Social Login Handlers remain same)
-
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-black selection:bg-primary/30">
-      {/* ... (Backgrounds remain same) ... */}
+      {/* Background Gradients */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] opacity-30 animate-pulse" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] opacity-20" />
 
@@ -106,7 +100,6 @@ export default function Auth() {
 
           {/* Header */}
           <div className="text-center mb-6">
-            {/* ... Logo ... */}
             <motion.div
               className="w-20 h-20 mx-auto mb-4 flex items-center justify-center relative"
               initial={{ scale: 0.8, opacity: 0 }}
@@ -123,6 +116,28 @@ export default function Auth() {
             <p className="text-xs text-zinc-400">
               {isLogin ? "Acesse seu segundo cérebro digital" : "Junte-se a nós e evolua."}
             </p>
+          </div>
+
+          {/* Google Login */}
+          <div className="mb-6">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={signInWithGoogle}
+              className="w-full py-2.5 rounded-xl bg-white text-black font-semibold text-sm flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
+            >
+              <Chrome className="w-4 h-4" />
+              {isLogin ? "Entrar com Google" : "Cadastrar com Google"}
+            </motion.button>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#09090b] px-2 text-zinc-500 rounded">Ou</span> {/* Adjusted bg color slightly */}
+              </div>
+            </div>
           </div>
 
           {/* Form */}
@@ -168,7 +183,7 @@ export default function Auth() {
                     value={mainGoal}
                     onChange={(e) => setMainGoal(e.target.value)}
                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
-                    style={{ color: mainGoal ? 'white' : '#52525b' }} // zinc-600 for placeholder feel
+                    style={{ color: mainGoal ? 'white' : '#52525b' }}
                   >
                     <option value="" disabled>Qual seu foco principal?</option>
                     <option value="productivity" className="bg-zinc-900">Produtividade Máxima</option>

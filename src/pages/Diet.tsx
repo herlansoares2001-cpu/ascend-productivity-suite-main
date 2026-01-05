@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  Apple, 
-  Plus, 
+import {
+  Apple,
+  Plus,
   ChevronRight,
   Flame,
   Beef,
@@ -10,6 +10,7 @@ import {
   Cookie
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { toast } from "sonner";
 
 interface Meal {
   id: string;
@@ -47,17 +48,17 @@ const Diet = () => {
     { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
-  const MacroProgress = ({ 
-    label, 
-    current, 
-    goal, 
-    icon: Icon, 
-    color 
-  }: { 
-    label: string; 
-    current: number; 
-    goal: number; 
-    icon: any; 
+  const MacroProgress = ({
+    label,
+    current,
+    goal,
+    icon: Icon,
+    color
+  }: {
+    label: string;
+    current: number;
+    goal: number;
+    icon: any;
     color: string;
   }) => {
     const percentage = Math.min((current / goal) * 100, 100);
@@ -68,7 +69,7 @@ const Diet = () => {
           <span className="text-xs text-muted-foreground font-light">{current}g</span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full rounded-full"
             style={{ backgroundColor: color }}
             initial={{ width: 0 }}
@@ -84,7 +85,7 @@ const Diet = () => {
   return (
     <div className="page-container">
       {/* Header */}
-      <motion.header 
+      <motion.header
         className="mb-6"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -96,7 +97,7 @@ const Diet = () => {
       </motion.header>
 
       {/* Calories Card */}
-      <motion.div 
+      <motion.div
         className="widget-card widget-card-lime mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -128,8 +129,8 @@ const Diet = () => {
                 strokeLinecap="round"
                 strokeDasharray={226.19}
                 initial={{ strokeDashoffset: 226.19 }}
-                animate={{ 
-                  strokeDashoffset: 226.19 - (226.19 * Math.min(totals.calories / dailyGoals.calories, 1)) 
+                animate={{
+                  strokeDashoffset: 226.19 - (226.19 * Math.min(totals.calories / dailyGoals.calories, 1))
                 }}
                 transition={{ duration: 1 }}
               />
@@ -144,7 +145,7 @@ const Diet = () => {
       </motion.div>
 
       {/* Macros */}
-      <motion.div 
+      <motion.div
         className="widget-card mb-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -152,24 +153,24 @@ const Diet = () => {
       >
         <h3 className="text-sm font-light text-muted-foreground mb-4">Macros do Dia</h3>
         <div className="flex gap-4">
-          <MacroProgress 
-            label="Proteína" 
-            current={totals.protein} 
-            goal={dailyGoals.protein} 
+          <MacroProgress
+            label="Proteína"
+            current={totals.protein}
+            goal={dailyGoals.protein}
             icon={Beef}
             color="#EBFF57"
           />
-          <MacroProgress 
-            label="Carbos" 
-            current={totals.carbs} 
-            goal={dailyGoals.carbs} 
+          <MacroProgress
+            label="Carbos"
+            current={totals.carbs}
+            goal={dailyGoals.carbs}
             icon={Cookie}
             color="#A2F7A1"
           />
-          <MacroProgress 
-            label="Gordura" 
-            current={totals.fat} 
-            goal={dailyGoals.fat} 
+          <MacroProgress
+            label="Gordura"
+            current={totals.fat}
+            goal={dailyGoals.fat}
             icon={Droplets}
             color="#4ECDC4"
           />
@@ -179,7 +180,7 @@ const Diet = () => {
       {/* Meals List */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-regular">Refeições de Hoje</h2>
-        <motion.button 
+        <motion.button
           className="w-9 h-9 rounded-full bg-primary flex items-center justify-center"
           whileTap={{ scale: 0.9 }}
         >
@@ -188,13 +189,13 @@ const Diet = () => {
       </div>
 
       {meals.length === 0 ? (
-        <EmptyState 
+        <EmptyState
           icon={Apple}
           title="Nenhuma refeição"
           description="Registre suas refeições para acompanhar suas calorias e macros."
         />
       ) : (
-        <motion.div 
+        <motion.div
           className="space-y-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

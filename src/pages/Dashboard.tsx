@@ -273,7 +273,7 @@ const Dashboard = () => {
         {/* Notes - Top Aligned & Reduced Height */}
         <div
           className="lg:col-span-1 bg-card/50 border border-border/50 rounded-3xl overflow-hidden min-h-[140px] p-5 flex flex-col justify-start cursor-pointer hover:bg-card/50"
-          onClick={() => navigate('/books')} // Redirecting to books or fallback
+          onClick={() => navigate('/notes')} // Redirecting to notes
         >
           <QuickNotesWidget />
         </div>

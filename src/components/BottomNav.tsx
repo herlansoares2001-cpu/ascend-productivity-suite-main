@@ -48,7 +48,7 @@ export function BottomNav() {
 
   return (
     <motion.nav
-      className="fixed bottom-6 z-50 glass rounded-full px-2 py-2 w-[90%] max-w-[380px] md:max-w-[480px] pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
+      className="fixed z-50 glass rounded-full px-2 py-2 w-[90%] max-w-[380px] md:max-w-[480px]"
       style={{
         boxShadow: "0 8px 32px -4px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.1)",
         left: "50%",

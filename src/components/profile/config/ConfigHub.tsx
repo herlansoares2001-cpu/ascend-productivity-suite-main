@@ -282,7 +282,7 @@ export function ConfigHub() {
                         </Badge>
                     </div>
                 </div >
-                <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-foreground" onClick={() => navigate('/profile/edit')}>
+                <Button variant="ghost" size="sm" className="flex text-muted-foreground hover:text-foreground" onClick={() => navigate('/profile/edit')}>
                     Editar
                 </Button>
             </div >
@@ -294,6 +294,7 @@ export function ConfigHub() {
                 < div className="space-y-1" >
                     <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-4 mb-2">Preferências</h3>
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
+                        <MenuItem icon={User} label="Editar Perfil" onClick={() => navigate('/profile/edit')} />
                         <MenuItem icon={Trophy} label="Galeria de Troféus" onClick={() => navigate('/achievements')} />
                         <MenuItem
                             icon={isDarkMode ? Moon : Sun}

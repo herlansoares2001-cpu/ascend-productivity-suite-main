@@ -35,12 +35,28 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { useMobileSetup } from "@/hooks/use-mobile-setup";
 import { CommandCenter } from "@/components/CommandCenter";
-
-// ... existing imports ...
+import { useEffect } from "react";
+import { App as CapacitorApp } from '@capacitor/app';
 
 function AppContent() {
   const { user, isLoading } = useAuth();
+
+  useMobileSetup();
+
+  useEffect(() => {
+    // Hardware Back Button Logic (Android)
+    if ((window as any).Capacitor) {
+      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        if (!canGoBack) {
+          CapacitorApp.exitApp();
+        } else {
+          window.history.back();
+        }
+      });
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
