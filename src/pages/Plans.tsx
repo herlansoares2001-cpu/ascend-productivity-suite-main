@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X, Zap, Crown, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionCheckout } from "@/components/subscription/SubscriptionCheckout";
 
 interface PlanProps {
     name: string;
@@ -92,65 +94,27 @@ const PlanCard = ({ name, price, period, features, notIncluded, recommended, col
 
 const Plans = () => {
     const navigate = useNavigate();
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-    const handleSubscribe = async (plan: string) => {
+    const handleSubscribe = (plan: string) => {
         if (plan === 'free') {
             toast.info("Você já está no plano Grátis.");
             return;
         }
-
-        try {
-            toast.loading("Iniciando checkout...");
-
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.access_token) {
-                throw new Error("Usuário não logado. Por favor faça login novamente.");
-            }
-
-            const response = await fetch('https://ahubncrfcdxsqrloqaeb.supabase.co/functions/v1/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ plan }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Erro detalhado do servidor:", errorData);
-
-                if (response.status === 401 || (errorData?.message && errorData.message.includes("Invalid JWT"))) {
-                    console.error("DEBUG AUTH ERROR:", errorData);
-                    toast.error(`Erro de Autenticação (Debug): 
-                        Header: ${errorData.debug_header_start} 
-                        URL: ${errorData.debug_url_start} 
-                        Key: ${errorData.debug_key_start}
-                    `, { duration: 10000 });
-                    // await supabase.auth.signOut();
-                    // window.location.href = "/auth"; 
-                    return;
-                }
-
-                throw new Error(`Erro: ${errorData.error || "Desconhecido"} - ${errorData.details || ""}`);
-            }
-
-            const data = await response.json();
-
-            if (data?.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error("URL de checkout não recebida");
-            }
-        } catch (error: any) {
-            toast.dismiss();
-            toast.error(error.message);
-            console.error("Erro completo:", error);
-        }
+        setSelectedPlan(plan);
+        setIsCheckoutOpen(true);
     };
 
     return (
         <div className="page-container pb-24">
+            {selectedPlan && (
+                <SubscriptionCheckout
+                    plan={selectedPlan}
+                    isOpen={isCheckoutOpen}
+                    onClose={() => setIsCheckoutOpen(false)}
+                />
+            )}
             <motion.div
                 className="text-center max-w-2xl mx-auto mb-12 pt-8"
                 initial={{ opacity: 0, y: -20 }}

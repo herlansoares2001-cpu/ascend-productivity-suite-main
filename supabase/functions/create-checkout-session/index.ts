@@ -37,15 +37,10 @@ Deno.serve(async (req) => {
             console.log("Auth failed:", authError);
             return new Response(JSON.stringify({
                 error: "Auth Failed",
-                details: authError?.message || "No user info",
-                debug_header_start: authHeader.substring(0, 10),
-                debug_url_start: supabaseUrl?.substring(0, 10),
-                debug_key_start: supabaseKey?.substring(0, 10),
-                is_anon: supabaseKey?.length < 200 // heuristic
+                details: authError?.message || "No user info"
             }), { status: 401, headers: corsHeaders });
         }
 
-        // Logic
         let body;
         try {
             body = await req.json();
@@ -90,17 +85,18 @@ Deno.serve(async (req) => {
 
         const origin = req.headers.get("origin") || "http://localhost:8080";
 
+        // EMBEDDED CHECKOUT SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             mode: "subscription",
+            ui_mode: 'embedded', // Crucial change for embedded view
             customer: customerId,
             line_items: [{ price_data: priceData, quantity: 1 }],
-            success_url: `${origin}/profile?session_id={CHECKOUT_SESSION_ID}&success=true`,
-            cancel_url: `${origin}/plans`,
+            return_url: `${origin}/plans?session_id={CHECKOUT_SESSION_ID}&success=true`,
             metadata: { user_id: user.id, plan_name: plan }
         });
 
-        return new Response(JSON.stringify({ url: session.url }), {
+        return new Response(JSON.stringify({ clientSecret: session.client_secret }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 

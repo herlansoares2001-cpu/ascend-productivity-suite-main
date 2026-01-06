@@ -1,10 +1,13 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import Stripe from "npm:stripe@^14.21.0";
+import { createClient } from "npm:@supabase/supabase-js@^2.45.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
     apiVersion: "2023-10-16",
+    httpClient: Stripe.createFetchHttpClient(),
 });
+
 const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
 
 serve(async (req) => {
@@ -15,16 +18,20 @@ serve(async (req) => {
     }
 
     try {
-        // 1. Verify Signature
         const body = await req.text();
-        const event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+        let event;
+
+        try {
+            event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
+        } catch (err) {
+            return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+        }
 
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
 
-        // 2. Handle Event
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
             const userId = session.metadata?.user_id;
@@ -34,21 +41,32 @@ serve(async (req) => {
             if (userId && planName) {
                 console.log(`Processing subscription for user ${userId} -> ${planName}`);
 
-                await supabaseClient.from('profiles').update({
+                // Use UPSERT to handle missing profiles
+                const { data: updatedData, error: updateError } = await supabaseClient.from('profiles').upsert({
+                    id: userId,
                     subscription_tier: planName,
                     subscription_status: 'active',
                     stripe_customer_id: customerId as string
-                }).eq('id', userId);
+                }).select();
+
+                console.log("Upsert result:", updatedData, updateError);
+
+                return new Response(JSON.stringify({
+                    received: true,
+                    debug: {
+                        userId,
+                        planName,
+                        action: 'upsert',
+                        updatedRows: updatedData?.length,
+                        error: updateError
+                    }
+                }), {
+                    headers: { "Content-Type": "application/json" },
+                });
             }
         }
-        else if (event.type === 'customer.subscription.updated') {
-            // Handle renewal or cancellation logic if deeper integration needed
-            // For now checkout completion is sufficient for initial access
-        }
         else if (event.type === 'customer.subscription.deleted') {
-            // Downgrade to free if subscription canceled
             const subscription = event.data.object;
-            // We need to find user by stripe_customer_id
             const customerId = subscription.customer;
             await supabaseClient.from('profiles').update({
                 subscription_tier: 'free',
