@@ -1,4 +1,4 @@
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster as Sonner, toast } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -55,6 +55,27 @@ function AppContent() {
           window.history.back();
         }
       });
+    }
+  }, []);
+
+  // -- STRIPE SUCCESS HANDLING --
+  // Force update profile when returning from Checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
+      console.log("Stripe Checkout Success Detected. Refreshing profile...");
+
+      // 1. Invalidate Profile Query
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+
+      // 2. Show success message
+      toast.success("Assinatura confirmada!", {
+        description: "Seu plano foi atualizado com sucesso."
+      });
+
+      // 3. Clean URL
+      const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+      window.history.replaceState({ path: newUrl }, "", newUrl);
     }
   }, []);
 

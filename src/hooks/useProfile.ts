@@ -11,6 +11,9 @@ export interface Profile {
   pomodoro_duration: number;
   created_at: string;
   updated_at: string;
+  subscription_tier: string;
+  subscription_status: string;
+  stripe_customer_id: string | null;
 }
 
 export function useProfile() {
@@ -29,7 +32,7 @@ export function useProfile() {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Profile | null;
+      return data as unknown as Profile | null;
     },
     enabled: !!user,
   });

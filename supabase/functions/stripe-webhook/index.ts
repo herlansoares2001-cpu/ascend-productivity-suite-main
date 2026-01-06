@@ -38,6 +38,12 @@ serve(async (req) => {
             const planName = session.metadata?.plan_name;
             const customerId = session.customer;
 
+            if (!userId || !planName) {
+                console.error("Missing metadata in Checkout Session:", session.metadata);
+                // Can't proceed without userId
+                return new Response("Webhook Error: Missing user_id or plan_name in metadata", { status: 400 });
+            }
+
             if (userId && planName) {
                 console.log(`Processing subscription for user ${userId} -> ${planName}`);
 

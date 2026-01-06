@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   Circle,
@@ -10,7 +11,9 @@ import {
   Trash2,
   Calendar,
   Zap,
+  Lock,
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { EmptyState } from "@/components/EmptyState";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -19,6 +22,7 @@ import { useHabits, Habit } from "@/hooks/useHabits";
 import { getHabitCategories } from "@/storage/habit-storage";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useGamification } from "@/hooks/useGamification";
+import { usePlanLimits } from "@/hooks/usePlanLimits"; // Added hook
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStreaks } from "@/hooks/useStreaks";
 import { StreakCounter } from "@/components/streaks/StreakCounter";
@@ -40,6 +44,8 @@ const Habits = () => {
 
   const { habits, streak, isLoading, createHabit, toggleHabit, deleteHabit } = useHabits();
   const { awardXP } = useGamification();
+  const { permissions } = usePlanLimits(); // Get permissions
+  const navigate = useNavigate();
   const categories = getHabitCategories();
 
   // --- STREAK COUNTER LOGIC ---
@@ -95,6 +101,16 @@ const Habits = () => {
   };
 
   const openCreate = () => {
+    if (!permissions.canCreateHabit) {
+      toast.error("Limite de hábitos atingido!", {
+        description: "Faça upgrade para Premium para criar ilimitados.",
+        action: {
+          label: "Upgrade",
+          onClick: () => navigate("/plans")
+        }
+      });
+      return;
+    }
     setEditingHabit(null);
     setIsSheetOpen(true);
   };
@@ -152,13 +168,25 @@ const Habits = () => {
 
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-regular">Sua Lista</h2>
-            <motion.button className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20" whileTap={{ scale: 0.9 }} onClick={openCreate}>
-              <Plus className="w-5 h-5 text-primary-foreground" />
+            <motion.button
+              className={`w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-colors ${!permissions.canCreateHabit ? 'bg-muted cursor-not-allowed' : 'bg-primary shadow-primary/20'}`}
+              whileTap={permissions.canCreateHabit ? { scale: 0.9 } : {}}
+              onClick={openCreate}
+            >
+              {!permissions.canCreateHabit ? (
+                <Lock className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <Plus className="w-5 h-5 text-primary-foreground" />
+              )}
             </motion.button>
           </div>
 
           {habits.length === 0 ? (
-            <EmptyState icon={CheckCircle2} title="Nenhum hábito" description="Adicione hábitos para começar." action={<motion.button className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm" whileTap={{ scale: 0.95 }} onClick={openCreate}>Adicionar Hábito</motion.button>} />
+            <EmptyState icon={CheckCircle2} title="Nenhum hábito" description="Adicione hábitos para começar." action={
+              <motion.button className="px-6 py-3 rounded-full bg-primary text-primary-foreground text-sm" whileTap={{ scale: 0.95 }} onClick={openCreate}>
+                Adicionar Hábito
+              </motion.button>
+            } />
           ) : (
             <motion.div className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <AnimatePresence>
@@ -225,8 +253,22 @@ const Habits = () => {
         <TabsContent value="vices" className="space-y-4">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-regular">Meus Contadores</h2>
-            <Button onClick={() => setIsStreakDialogOpen(true)} size="sm" className="bg-[#D4F657] text-black hover:bg-[#D4F657]/80">
-              <Plus className="w-4 h-4 mr-2" /> Novo Contador
+            <Button
+              onClick={() => {
+                if (!permissions.canCreateStreak) {
+                  toast.error("Limite de contadores atingido!", {
+                    description: "Faça upgrade para Premium.",
+                    action: { label: "Ver Planos", onClick: () => navigate("/plans") }
+                  });
+                  return;
+                }
+                setIsStreakDialogOpen(true);
+              }}
+              size="sm"
+              className={`${!permissions.canCreateStreak ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-[#D4F657] text-black hover:bg-[#D4F657]/80'}`}
+            >
+              {!permissions.canCreateStreak ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {!permissions.canCreateStreak ? 'Limite Free' : 'Novo Contador'}
             </Button>
           </div>
 

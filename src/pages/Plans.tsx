@@ -26,7 +26,7 @@ const colorStyles = {
     purple: { div: "bg-purple-500/10", icon: "text-purple-400" }
 };
 
-const PlanCard = ({ name, price, period, features, notIncluded, recommended, color, icon: Icon, onSubscribe }: PlanProps) => {
+const PlanCard = ({ name, price, period, features, notIncluded, recommended, color, icon: Icon, onSubscribe, isCurrentPlan }: PlanProps & { isCurrentPlan?: boolean }) => {
     const styles = colorStyles[color];
 
     return (
@@ -38,12 +38,19 @@ const PlanCard = ({ name, price, period, features, notIncluded, recommended, col
                 "relative flex flex-col p-6 rounded-3xl border transition-all duration-300",
                 recommended
                     ? "bg-[#09090b] border-[#D4F657]/50 shadow-[0_0_30px_-10px_rgba(212,246,87,0.3)]"
-                    : "bg-card/30 border-white/5 hover:border-white/10"
+                    : "bg-card/30 border-white/5 hover:border-white/10",
+                isCurrentPlan && "border-[#D4F657] bg-[#D4F657]/5"
             )}
         >
             {recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#D4F657] text-black text-[10px] font-bold uppercase tracking-wider rounded-full">
                     Mais Popular
+                </div>
+            )}
+
+            {isCurrentPlan && (
+                <div className="absolute top-4 right-4 px-2 py-0.5 bg-[#D4F657] text-black text-[10px] font-bold uppercase tracking-wider rounded-full flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Atual
                 </div>
             )}
 
@@ -79,27 +86,31 @@ const PlanCard = ({ name, price, period, features, notIncluded, recommended, col
 
             <Button
                 onClick={onSubscribe}
+                disabled={isCurrentPlan}
                 className={cn(
                     "w-full h-12 rounded-xl font-medium transition-all",
                     recommended
                         ? "bg-[#D4F657] text-black hover:bg-[#D4F657]/90 hover:scale-[1.02]"
-                        : "bg-white/5 text-white hover:bg-white/10"
+                        : "bg-white/5 text-white hover:bg-white/10",
+                    isCurrentPlan && "opacity-100 bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/50"
                 )}
             >
-                {price === "Grátis" ? "Plano Atual" : "Assinar Agora"}
+                {isCurrentPlan ? "Plano Atual" : (price === "Grátis" ? "Downgrade" : "Assinar Agora")}
             </Button>
         </motion.div>
     );
 };
 
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+
 const Plans = () => {
     const navigate = useNavigate();
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const { currentPlan } = usePlanLimits();
 
     const handleSubscribe = (plan: string) => {
-        if (plan === 'free') {
-            toast.info("Você já está no plano Grátis.");
+        if (plan === currentPlan) {
             return;
         }
         setSelectedPlan(plan);
@@ -131,6 +142,7 @@ const Plans = () => {
                     period="sempre"
                     color="zinc"
                     icon={Shield}
+                    isCurrentPlan={currentPlan === 'free'}
                     features={[
                         "Dashboard Básico",
                         "Controle de Hábitos (até 3)",
@@ -153,6 +165,7 @@ const Plans = () => {
                     recommended={true}
                     color="lime"
                     icon={Zap}
+                    isCurrentPlan={currentPlan === 'standard'}
                     features={[
                         "Tudo do Free",
                         "Hábitos Ilimitados",
@@ -173,6 +186,7 @@ const Plans = () => {
                     period="mês"
                     color="purple"
                     icon={Crown}
+                    isCurrentPlan={currentPlan === 'premium'}
                     features={[
                         "Tudo do Standard",
                         "AI Copilot Ilimitado",
