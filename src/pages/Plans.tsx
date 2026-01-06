@@ -113,6 +113,17 @@ const Plans = () => {
         if (plan === currentPlan) {
             return;
         }
+
+        if (plan === 'free') {
+            toast.info("Para cancelar sua assinatura paga, acesse o portal de cliente ou entre em contato com o suporte.", {
+                action: {
+                    label: "Suporte",
+                    onClick: () => window.open('mailto:suporte@seusite.com')
+                }
+            });
+            return;
+        }
+
         setSelectedPlan(plan);
         setIsCheckoutOpen(true);
     };
@@ -160,35 +171,36 @@ const Plans = () => {
 
                 <PlanCard
                     name="Standard"
-                    price="R$ 29,90"
+                    price="R$ 19,90"
                     period="mês"
                     recommended={true}
                     color="lime"
                     icon={Zap}
                     isCurrentPlan={currentPlan === 'standard'}
                     features={[
-                        "Tudo do Free",
-                        "Hábitos Ilimitados",
-                        "AI Copilot (50 msg/dia)",
-                        "Metas e Projetos",
-                        "Gráficos Financeiros"
+                        "Até 20 Hábitos",
+                        "Até 5 Contadores (Streaks)",
+                        "Módulo Financeiro Completo",
+                        "AI Copilot (20 msg/dia)",
+                        "Metas e Projetos"
                     ]}
                     notIncluded={[
                         "AI Copilot Ilimitado",
-                        "Consultoria Mensal",
+                        "Hábitos Ilimitados",
                     ]}
                     onSubscribe={() => handleSubscribe('standard')}
                 />
 
                 <PlanCard
                     name="Premium"
-                    price="R$ 59,90"
+                    price="R$ 29,90"
                     period="mês"
                     color="purple"
                     icon={Crown}
                     isCurrentPlan={currentPlan === 'premium'}
                     features={[
-                        "Tudo do Standard",
+                        "Hábitos Ilimitados",
+                        "Streaks Ilimitados",
                         "AI Copilot Ilimitado",
                         "Backup Automático",
                         "Temas Exclusivos",

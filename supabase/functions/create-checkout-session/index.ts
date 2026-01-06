@@ -61,14 +61,14 @@ Deno.serve(async (req) => {
             priceData = {
                 currency: 'brl',
                 product_data: { name: 'Ascend Standard', description: 'Plano Standard - Mensal' },
-                unit_amount: 2990,
+                unit_amount: 1990, // R$ 19,90
                 recurring: { interval: 'month' },
             };
         } else if (plan === 'premium') {
             priceData = {
                 currency: 'brl',
                 product_data: { name: 'Ascend Premium', description: 'Plano Premium - Mensal' },
-                unit_amount: 5990,
+                unit_amount: 2990, // R$ 29,90
                 recurring: { interval: 'month' },
             };
         } else {

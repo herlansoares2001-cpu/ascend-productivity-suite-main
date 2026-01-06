@@ -271,8 +271,8 @@ export function ConfigHub() {
             <div className="bg-card border border-white/5 rounded-3xl p-6 mb-8 flex items-center justify-between shadow-xl">
                 <div className="flex items-center gap-4">
                     <Avatar className="w-16 h-16 border-2 border-[#E9FF57]">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} />
-                        <AvatarFallback>U</AvatarFallback>
+                        <AvatarImage src={user?.user_metadata?.avatar_url} />
+                        <AvatarFallback><User className="w-8 h-8 text-muted-foreground" /></AvatarFallback>
                     </Avatar>
                     <div>
                         <h2 className="font-semibold text-lg text-foreground">{user?.user_metadata?.full_name || 'Usuário Ascend'}</h2>
@@ -336,8 +336,8 @@ export function ConfigHub() {
                     <div className="bg-card border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-lg">
                         <MenuItem icon={Download} label="Exportar Meus Dados (Backup)" onClick={handleExportData} />
                         <MenuItem icon={Download} label="Importar Dados (Restaurar)" onClick={triggerImport} />
-                        <MenuItem icon={HelpCircle} label="Ajuda e Suporte" onClick={() => window.open('https://support.google.com', '_blank')} />
-                        <MenuItem icon={FileText} label="Termos de Uso" showArrow={false} onClick={() => window.open('#', '_blank')} />
+                        <MenuItem icon={HelpCircle} label="Ajuda e Suporte" onClick={() => navigate('/support')} />
+                        <MenuItem icon={FileText} label="Termos e Privacidade" showArrow={true} onClick={() => navigate('/terms')} />
                     </div>
                 </div>
 

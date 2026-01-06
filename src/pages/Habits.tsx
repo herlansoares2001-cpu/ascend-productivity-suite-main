@@ -44,7 +44,7 @@ const Habits = () => {
 
   const { habits, streak, isLoading, createHabit, toggleHabit, deleteHabit } = useHabits();
   const { awardXP } = useGamification();
-  const { permissions } = usePlanLimits(); // Get permissions
+  const { permissions } = usePlanLimits();
   const navigate = useNavigate();
   const categories = getHabitCategories();
 

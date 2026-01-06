@@ -62,6 +62,31 @@ export const SubscriptionCheckout = ({ plan, isOpen, onClose }: SubscriptionChec
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                    <div className="bg-primary/5 p-4 rounded-lg mb-4">
+                        <h3 className="font-bold text-primary mb-2">
+                            Você está assinando o Ascend {plan === 'standard' ? 'Standard' : 'Premium'}
+                        </h3>
+                        <ul className="text-sm space-y-1 text-muted-foreground">
+                            {plan === 'standard' && (
+                                <>
+                                    <li>✓ Até 20 Hábitos e 5 Streaks</li>
+                                    <li>✓ Módulo Financeiro Completo</li>
+                                    <li>✓ IA Básica (10 msg/dia)</li>
+                                </>
+                            )}
+                            {plan === 'premium' && (
+                                <>
+                                    <li>✓ Hábitos e Streaks Ilimitados</li>
+                                    <li>✓ Metas e Projetos Ilimitados</li>
+                                    <li>✓ Acesso Prioritário à IA (100 msg/dia) e Suporte</li>
+                                </>
+                            )}
+                        </ul>
+                        <p className="mt-3 font-semibold text-lg">
+                            {plan === 'standard' ? 'R$ 19,90' : 'R$ 29,90'} / mês
+                        </p>
+                    </div>
+
                     {clientSecret && (
                         <EmbeddedCheckoutProvider
                             stripe={stripePromise}

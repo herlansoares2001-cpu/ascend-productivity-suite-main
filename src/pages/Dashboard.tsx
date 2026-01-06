@@ -35,6 +35,7 @@ import { WeeklyCalendar } from "@/components/widgets/WeeklyCalendar";
 import { FinanceWidget } from "@/components/widgets/FinanceWidget";
 import { GoalsWidget } from "@/components/widgets/GoalsWidget";
 import { StreakCounter } from "@/components/streaks/StreakCounter";
+import { QuickActionFab } from "@/components/dashboard/QuickActionFab";
 
 // --- HELPERS ---
 const BentoCard = ({ children, className, onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) => (
@@ -129,6 +130,48 @@ const Dashboard = () => {
     }
     fetchLastBook();
   }, [user]);
+
+  // --- LOCAL DATA SYNC (Goals, Workout, Diet) ---
+  const [localGoals, setLocalGoals] = useState<any[]>([]);
+  const [lastWorkout, setLastWorkout] = useState<any>(null);
+  const [dietSummary, setDietSummary] = useState<{ calories: number; label: string }>({ calories: 0, label: '0 kcal' });
+
+  useEffect(() => {
+    const syncLocalData = () => {
+      // Goals
+      const savedGoals = localStorage.getItem('ascend_goals');
+      if (savedGoals) {
+        setLocalGoals(JSON.parse(savedGoals));
+      }
+
+      // Workout
+      const savedWorkouts = localStorage.getItem('ascend_workouts');
+      if (savedWorkouts) {
+        const parsedWorkouts = JSON.parse(savedWorkouts);
+        if (parsedWorkouts.length > 0) {
+          setLastWorkout(parsedWorkouts[0]); // Most recent is first
+        }
+      }
+
+      // Diet
+      const savedMeals = localStorage.getItem('ascend_meals');
+      if (savedMeals) {
+        const meals: any[] = JSON.parse(savedMeals);
+        const totalCals = meals.reduce((acc, m) => acc + (m.calories || 0), 0);
+        setDietSummary({ calories: totalCals, label: `${totalCals} kcal` });
+      }
+    };
+
+    syncLocalData();
+
+    // Listen for storage changes (cross-tab) or custom events if we dispatch them
+    // For simplicity, we just run once here. To make it real-time within the same tab, 
+    // we rely on the user navigating back to dashboard which re-mounts component.
+    // Or we could set an interval.
+    const interval = setInterval(syncLocalData, 2000); // Polling every 2s to check updates
+    return () => clearInterval(interval);
+
+  }, []);
 
   // 2. Logic
   const todayEvents = getEvents(selectedDate);
@@ -256,10 +299,9 @@ const Dashboard = () => {
         {/* Goals Compact - Centered & Padded */}
         <div
           className="lg:col-span-1 bg-card/50 border border-border/50 rounded-3xl p-5 min-h-[140px] relative grayscale hover:grayscale-0 transition-all flex flex-col justify-start cursor-pointer hover:bg-card/50"
-          onClick={() => navigate('/calendar?tab=goals')}
+          onClick={() => navigate('/goals')}
         >
-          {/* TODO: Connect to Real Goals */}
-          <GoalsWidget goals={[]} />
+          <GoalsWidget goals={localGoals} />
         </div>
 
         {/* Reminders - Top Aligned & Reduced Height */}
@@ -287,7 +329,9 @@ const Dashboard = () => {
                 <Dumbbell className="w-5 h-5 text-orange-400" />
                 <div>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase">TREINO</p>
-                  <p className="text-sm font-medium text-white truncate max-w-[120px]">--</p>
+                  <p className="text-sm font-medium text-white truncate max-w-[120px]">
+                    {lastWorkout ? lastWorkout.name : "Sem treino hoje"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -298,7 +342,9 @@ const Dashboard = () => {
                 <Apple className="w-5 h-5 text-pink-400" />
                 <div>
                   <p className="text-[10px] text-zinc-500 font-bold uppercase">DIETA</p>
-                  <p className="text-sm font-medium text-white">--</p>
+                  <p className="text-sm font-medium text-white">
+                    {dietSummary.label}
+                  </p>
                 </div>
               </div>
             </div>
@@ -314,9 +360,9 @@ const Dashboard = () => {
               <p className="text-xs text-zinc-500">Sem Abstinências Ativas</p>
             </div>
           )}
-        </div>
-      </div>
+        </div>      </div>
 
+      <QuickActionFab />
     </div>
   );
 };

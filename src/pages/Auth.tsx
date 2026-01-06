@@ -223,6 +223,23 @@ export default function Auth() {
               {errors.password && <p className="text-[10px] text-red-400 pl-1">{errors.password}</p>}
             </div>
 
+            {!isLogin && (
+              <div className="flex items-start gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  required
+                  className="mt-1 w-4 h-4 rounded border-white/20 bg-black/20 text-primary focus:ring-primary/20"
+                />
+                <label htmlFor="terms" className="text-xs text-zinc-500 leading-relaxed cursor-pointer">
+                  Ao criar uma conta, você concorda com nossos{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary underline">Termos de Uso</a>
+                  {" "}e{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary underline">Política de Privacidade</a>.
+                </label>
+              </div>
+            )}
+
             <motion.button
               type="submit"
               disabled={isLoading}
